@@ -562,6 +562,8 @@ async function downloadCard() {
     border:1px solid rgba(201,168,76,0.2);
     border-radius:18px;padding:22px 24px;
     box-shadow:0 24px 70px rgba(0,0,0,0.7);
+    transform:none !important;
+    backface-visibility:visible !important;
   }
   .back-title{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.18em;color:#C9A84C;text-transform:uppercase;border-bottom:1px solid rgba(201,168,76,0.15);padding-bottom:8px;margin-bottom:12px}
   .back-row{display:flex;justify-content:space-between;margin-bottom:8px}
