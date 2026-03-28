@@ -50,6 +50,13 @@ function renderBreakdown(targetId, items, emptyText) {
     .join("");
 }
 
+function renderBackupInfo(summary) {
+  document.getElementById("databaseEngine").textContent = summary.database.engine;
+  document.getElementById("csvRows").textContent = summary.csv_backup.rows;
+  document.getElementById("csvUpdatedAt").textContent = formatDate(summary.csv_backup.modified_at);
+  document.getElementById("csvFilename").textContent = summary.csv_backup.filename;
+}
+
 function renderRegistrations(items) {
   const tbody = document.getElementById("registrationsTable");
   const status = document.getElementById("tableStatus");
@@ -126,6 +133,7 @@ async function loadSummary() {
   renderLatestRegistration(payload.overview.latest_registration);
   renderBreakdown("genderBreakdown", payload.gender_breakdown, "No gender data yet.");
   renderBreakdown("departmentBreakdown", payload.department_breakdown, "No department data yet.");
+  renderBackupInfo(payload);
 }
 
 async function loadRegistrations() {

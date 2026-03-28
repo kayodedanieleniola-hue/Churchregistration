@@ -1,14 +1,19 @@
+import base64
+import csv
 import os
-import sqlite3
+import re
+from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 
 from flask import (
     Flask,
+    abort,
     jsonify,
     redirect,
     render_template,
     request,
+    send_file,
     send_from_directory,
     session,
     url_for,
@@ -17,62 +22,47 @@ from flask_cors import CORS
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DATABASE_PATH = Path(os.getenv("DATABASE_PATH", BASE_DIR / "registrations.db"))
+DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
+PHOTOS_DIR = DATA_DIR / "photos"
+CSV_PATH = Path(os.getenv("CSV_BACKUP_PATH", DATA_DIR / "registrations.csv"))
+
+CSV_COLUMNS = [
+    "registration_id",
+    "full_name",
+    "email",
+    "phone",
+    "dob",
+    "age",
+    "gender",
+    "address",
+    "department",
+    "marital_status",
+    "state_origin",
+    "nationality",
+    "occupation",
+    "first_time",
+    "inviter",
+    "why_joined",
+    "prayer_request",
+    "nok_name",
+    "nok_phone",
+    "member_id",
+    "photo_filename",
+    "created_at",
+]
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
 CORS(app)
 
 
-def get_db_connection():
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init_db():
-    with get_db_connection() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS registrations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                full_name TEXT NOT NULL,
-                email TEXT NOT NULL,
-                phone TEXT,
-                dob TEXT,
-                age INTEGER,
-                gender TEXT,
-                address TEXT,
-                department TEXT,
-                marital_status TEXT,
-                state_origin TEXT,
-                nationality TEXT,
-                occupation TEXT,
-                first_time TEXT,
-                inviter TEXT,
-                why_joined TEXT,
-                prayer_request TEXT,
-                nok_name TEXT,
-                nok_phone TEXT,
-                member_id TEXT UNIQUE,
-                photo_data TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-
-
-def row_to_dict(row):
-    return dict(row) if row is not None else None
-
-
-def get_registration_by_id(registration_id):
-    with get_db_connection() as conn:
-        row = conn.execute(
-            "SELECT * FROM registrations WHERE id = ?",
-            (registration_id,),
-        ).fetchone()
-    return row_to_dict(row)
+def ensure_storage():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
+    if not CSV_PATH.exists():
+        with CSV_PATH.open("w", newline="", encoding="utf-8") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=CSV_COLUMNS)
+            writer.writeheader()
 
 
 def get_admin_credentials():
@@ -98,60 +88,166 @@ def admin_required(view_func):
     return wrapped
 
 
-def build_admin_summary():
-    with get_db_connection() as conn:
-        total_members = conn.execute(
-            "SELECT COUNT(*) FROM registrations"
-        ).fetchone()[0]
-        first_timers = conn.execute(
-            "SELECT COUNT(*) FROM registrations WHERE LOWER(COALESCE(first_time, '')) = 'yes'"
-        ).fetchone()[0]
-        captured_photos = conn.execute(
-            "SELECT COUNT(*) FROM registrations WHERE photo_data IS NOT NULL AND TRIM(photo_data) != ''"
-        ).fetchone()[0]
-        recent_signups = conn.execute(
-            """
-            SELECT COUNT(*) FROM registrations
-            WHERE datetime(created_at) >= datetime('now', '-7 day')
-            """
-        ).fetchone()[0]
-        latest_registration = conn.execute(
-            """
-            SELECT full_name, member_id, created_at
-            FROM registrations
-            ORDER BY datetime(created_at) DESC, id DESC
-            LIMIT 1
-            """
-        ).fetchone()
-        gender_breakdown = conn.execute(
-            """
-            SELECT COALESCE(NULLIF(TRIM(gender), ''), 'Unspecified') AS label, COUNT(*) AS total
-            FROM registrations
-            GROUP BY label
-            ORDER BY total DESC, label ASC
-            """
-        ).fetchall()
-        department_breakdown = conn.execute(
-            """
-            SELECT COALESCE(NULLIF(TRIM(department), ''), 'Unassigned') AS label, COUNT(*) AS total
-            FROM registrations
-            GROUP BY label
-            ORDER BY total DESC, label ASC
-            LIMIT 8
-            """
-        ).fetchall()
+def get_now_iso():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def slugify(value):
+    return re.sub(r"[^a-z0-9]+", "-", (value or "").strip().lower()).strip("-") or "member"
+
+
+def read_registrations():
+    ensure_storage()
+    with CSV_PATH.open("r", newline="", encoding="utf-8") as csv_file:
+        reader = csv.DictReader(csv_file)
+        rows = [decorate_registration(dict(row)) for row in reader]
+    rows.sort(key=lambda row: (row.get("created_at") or "", row.get("registration_id") or ""), reverse=True)
+    return rows
+
+
+def write_registrations(rows):
+    ensure_storage()
+    clean_rows = [{column: row.get(column, "") for column in CSV_COLUMNS} for row in rows]
+    with CSV_PATH.open("w", newline="", encoding="utf-8") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=CSV_COLUMNS)
+        writer.writeheader()
+        writer.writerows(clean_rows)
+
+
+def append_registration(row):
+    ensure_storage()
+    with CSV_PATH.open("a", newline="", encoding="utf-8") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=CSV_COLUMNS)
+        writer.writerow({column: row.get(column, "") for column in CSV_COLUMNS})
+
+
+def decorate_registration(row):
+    decorated = dict(row)
+    decorated["id"] = int(decorated["registration_id"]) if decorated.get("registration_id") else None
+    photo_filename = decorated.get("photo_filename")
+    decorated["photo_url"] = (
+        url_for("member_photo", filename=photo_filename)
+        if photo_filename
+        else None
+    )
+    return decorated
+
+
+def get_next_registration_id(existing_rows):
+    ids = [int(row["registration_id"]) for row in existing_rows if row.get("registration_id")]
+    return max(ids, default=0) + 1
+
+
+def save_member_photo(photo_data_url, member_id, registration_id):
+    if not photo_data_url:
+        return ""
+
+    match = re.match(r"^data:image\/[a-zA-Z0-9.+-]+;base64,(.+)$", photo_data_url)
+    if not match:
+        raise ValueError("Invalid image data received.")
+
+    image_bytes = base64.b64decode(match.group(1))
+    filename = f"{slugify(member_id or str(registration_id))}-{registration_id}.jpg"
+    file_path = PHOTOS_DIR / filename
+    with file_path.open("wb") as image_file:
+        image_file.write(image_bytes)
+    return filename
+
+
+def get_registration_by_id(registration_id):
+    for row in read_registrations():
+        if row.get("registration_id") == str(registration_id):
+            return row
+    return None
+
+
+def normalize_registration_payload(data):
+    return {
+        "full_name": (data.get("fullName") or "").strip(),
+        "email": (data.get("email") or "").strip(),
+        "phone": data.get("phone") or "",
+        "dob": data.get("dob") or "",
+        "age": str(data.get("ageNum") or ""),
+        "gender": data.get("gender") or "",
+        "address": data.get("address") or "",
+        "department": data.get("department") or "",
+        "marital_status": data.get("marital") or "",
+        "state_origin": data.get("stateOrigin") or "",
+        "nationality": data.get("nationality") or "",
+        "occupation": data.get("occupation") or "",
+        "first_time": data.get("firstTime") or "",
+        "inviter": data.get("inviter") or "",
+        "why_joined": data.get("whyJoined") or "",
+        "prayer_request": data.get("prayerRequest") or "",
+        "nok_name": data.get("nokName") or "",
+        "nok_phone": data.get("nokPhone") or "",
+        "member_id": (data.get("memberId") or "").strip(),
+    }
+
+
+def get_storage_summary(registrations):
+    latest_registration = registrations[0] if registrations else None
+    one_week_ago = datetime.now(timezone.utc).timestamp() - (7 * 24 * 60 * 60)
+    recent_signups = 0
+
+    for row in registrations:
+        created_at = row.get("created_at")
+        if not created_at:
+            continue
+        try:
+            parsed = datetime.fromisoformat(created_at)
+        except ValueError:
+            continue
+        if parsed.timestamp() >= one_week_ago:
+            recent_signups += 1
+
+    gender_totals = {}
+    department_totals = {}
+    first_timers = 0
+    captured_photos = 0
+
+    for row in registrations:
+        gender = (row.get("gender") or "").strip() or "Unspecified"
+        department = (row.get("department") or "").strip() or "Unassigned"
+        gender_totals[gender] = gender_totals.get(gender, 0) + 1
+        department_totals[department] = department_totals.get(department, 0) + 1
+
+        if (row.get("first_time") or "").strip().lower() == "yes":
+            first_timers += 1
+        if row.get("photo_filename"):
+            captured_photos += 1
+
+    csv_modified_at = datetime.fromtimestamp(
+        CSV_PATH.stat().st_mtime,
+        tz=timezone.utc,
+    ).isoformat()
 
     return {
         "success": True,
         "overview": {
-            "total_members": total_members,
+            "total_members": len(registrations),
             "first_timers": first_timers,
             "captured_photos": captured_photos,
             "recent_signups": recent_signups,
-            "latest_registration": row_to_dict(latest_registration),
+            "latest_registration": latest_registration,
         },
-        "gender_breakdown": [row_to_dict(row) for row in gender_breakdown],
-        "department_breakdown": [row_to_dict(row) for row in department_breakdown],
+        "gender_breakdown": [
+            {"label": label, "total": total}
+            for label, total in sorted(gender_totals.items(), key=lambda item: (-item[1], item[0]))
+        ],
+        "department_breakdown": [
+            {"label": label, "total": total}
+            for label, total in sorted(department_totals.items(), key=lambda item: (-item[1], item[0]))[:8]
+        ],
+        "csv_backup": {
+            "path": str(CSV_PATH),
+            "filename": CSV_PATH.name,
+            "rows": len(registrations),
+            "modified_at": csv_modified_at,
+        },
+        "database": {
+            "engine": "csv-file",
+        },
     }
 
 
@@ -172,6 +268,17 @@ def favicon():
 @app.route("/healthz")
 def healthcheck():
     return jsonify({"success": True, "status": "ok"})
+
+
+@app.route("/media/photos/<path:filename>")
+@admin_required
+def member_photo(filename):
+    safe_path = (PHOTOS_DIR / filename).resolve()
+    if PHOTOS_DIR.resolve() not in safe_path.parents and safe_path != PHOTOS_DIR.resolve():
+        abort(404)
+    if not safe_path.exists():
+        abort(404)
+    return send_from_directory(PHOTOS_DIR, filename)
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
@@ -217,61 +324,54 @@ def admin_id_card(registration_id):
     return render_template("id_card.html", registration=registration)
 
 
+@app.route("/admin/backups/registrations.csv")
+@admin_required
+def download_csv_backup():
+    ensure_storage()
+    return send_file(
+        CSV_PATH,
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=CSV_PATH.name,
+    )
+
+
 @app.route("/api/register", methods=["POST"])
 def register():
     data = request.get_json(silent=True) or {}
+    registration = normalize_registration_payload(data)
 
-    full_name = (data.get("fullName") or "").strip()
-    email = (data.get("email") or "").strip()
-    member_id = (data.get("memberId") or "").strip() or None
-
-    if not full_name:
+    if not registration["full_name"]:
         return jsonify({"success": False, "error": "Full name is required."}), 400
-    if not email:
+    if not registration["email"]:
         return jsonify({"success": False, "error": "Email is required."}), 400
+    if not registration["member_id"]:
+        return jsonify({"success": False, "error": "Member ID is required."}), 400
 
     try:
-        with get_db_connection() as conn:
-            cursor = conn.execute(
-                """
-                INSERT INTO registrations (
-                    full_name, email, phone, dob, age, gender, address,
-                    department, marital_status, state_origin, nationality,
-                    occupation, first_time, inviter, why_joined, prayer_request,
-                    nok_name, nok_phone, member_id, photo_data
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    full_name,
-                    email,
-                    data.get("phone"),
-                    data.get("dob"),
-                    data.get("ageNum"),
-                    data.get("gender"),
-                    data.get("address"),
-                    data.get("department"),
-                    data.get("marital"),
-                    data.get("stateOrigin"),
-                    data.get("nationality"),
-                    data.get("occupation"),
-                    data.get("firstTime"),
-                    data.get("inviter"),
-                    data.get("whyJoined"),
-                    data.get("prayerRequest"),
-                    data.get("nokName"),
-                    data.get("nokPhone"),
-                    member_id,
-                    data.get("photoDataUrl"),
-                ),
-            )
-            saved_id = cursor.lastrowid
-    except sqlite3.IntegrityError:
-        return jsonify(
-            {
-                "success": False,
-                "error": "This member ID already exists. Refresh and try again.",
-            }
-        ), 409
+        existing_rows = read_registrations()
+        if any(row.get("member_id") == registration["member_id"] for row in existing_rows):
+            return jsonify(
+                {
+                    "success": False,
+                    "error": "This member ID already exists. Refresh and try again.",
+                }
+            ), 409
+
+        registration_id = get_next_registration_id(existing_rows)
+        photo_filename = save_member_photo(
+            data.get("photoDataUrl"),
+            registration["member_id"],
+            registration_id,
+        )
+
+        saved_row = {
+            "registration_id": str(registration_id),
+            **registration,
+            "photo_filename": photo_filename,
+            "created_at": get_now_iso(),
+        }
+        append_registration(saved_row)
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
@@ -279,8 +379,9 @@ def register():
         {
             "success": True,
             "message": "Registration saved successfully.",
-            "registration_id": saved_id,
-            "member_id": member_id,
+            "registration_id": registration_id,
+            "member_id": registration["member_id"],
+            "created_at": saved_row["created_at"],
         }
     )
 
@@ -289,11 +390,7 @@ def register():
 @admin_required
 def get_registrations():
     try:
-        with get_db_connection() as conn:
-            rows = conn.execute(
-                "SELECT * FROM registrations ORDER BY datetime(created_at) DESC, id DESC"
-            ).fetchall()
-        return jsonify({"success": True, "registrations": [row_to_dict(row) for row in rows]})
+        return jsonify({"success": True, "registrations": read_registrations()})
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
@@ -302,7 +399,7 @@ def get_registrations():
 @admin_required
 def get_stats():
     try:
-        return jsonify(build_admin_summary())
+        return jsonify(get_storage_summary(read_registrations()))
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
@@ -311,7 +408,7 @@ def get_stats():
 @admin_required
 def get_admin_summary():
     try:
-        return jsonify(build_admin_summary())
+        return jsonify(get_storage_summary(read_registrations()))
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
@@ -325,7 +422,7 @@ def get_registration(registration_id):
     return jsonify({"success": True, "registration": registration})
 
 
-init_db()
+ensure_storage()
 
 
 if __name__ == "__main__":

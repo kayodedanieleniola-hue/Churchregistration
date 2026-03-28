@@ -252,8 +252,8 @@
         <div class="church-name">Front</div>
         <div class="card-body">
           <div class="photo-wrap">
-            {% if registration.photo_data %}
-            <img src="{{ registration.photo_data }}" alt="{{ registration.full_name }}">
+            {% if registration.photo_url %}
+            <img src="{{ registration.photo_url }}" alt="{{ registration.full_name }}">
             {% else %}
             <span>🧑</span>
             {% endif %}

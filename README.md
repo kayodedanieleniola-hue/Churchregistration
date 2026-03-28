@@ -6,7 +6,8 @@ Flask-based church registration system for Global Harvest Outer Ringroad.
 
 - Public registration flow
 - Photo capture with upload fallback
-- SQLite-backed registration storage
+- CSV-backed registration storage
+- Member photos saved as JPG files in `data/photos`
 - Protected admin dashboard
 - Recoverable member ID card page
 - Render deployment config
@@ -28,4 +29,5 @@ Set these environment variables before production deployment:
 - `SECRET_KEY`
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
-- `DATABASE_PATH`
+- `DATA_DIR`
+- `CSV_BACKUP_PATH`
