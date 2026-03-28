@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
 <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
 <!-- ══════════ LOADER ══════════ -->
@@ -112,13 +113,13 @@
   </section>
 
   <div class="social-bar">
-    <a href="#" class="social-link">
+    <a href="https://www.instagram.com/ghorrdteenschurch?igsh=MW5hY2k1Z28yOGs3Mg==" class="social-link" target="_blank" rel="noopener noreferrer">
       <div class="social-icon">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
       </div>
       Instagram
     </a>
-    <a href="#" class="social-link">
+    <a href="https://www.tiktok.com/@ghorrd.teens.chur?_r=1&_t=ZS-946xygVyvO4" class="social-link" target="_blank" rel="noopener noreferrer">
       <div class="social-icon">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.74a4.85 4.85 0 0 1-1.01-.05z"/></svg>
       </div>
@@ -364,7 +365,7 @@
     </button>
   </div>
 
-  <input id="photoUploadInput" type="file" accept="image/*" capture="user" style="display:none" onchange="handlePhotoUpload(event)">
+  <input id="photoUploadInput" type="file" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
 
   <!-- Preview after capture -->
   <div class="captured-preview" id="capturedPreview">

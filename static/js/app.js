@@ -438,7 +438,12 @@ function resetTilt() {
   inner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
 }
 
-function downloadCard() {
+async function downloadCard() {
+  if (typeof html2canvas !== 'function') {
+    window.alert('PNG export is not available right now. Please refresh and try again.');
+    return;
+  }
+
   const photo = data.photoDataUrl
     ? `<img src="${data.photoDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" alt="photo">`
     : `<span style="font-size:2.8rem">🧑</span>`;
@@ -448,12 +453,7 @@ function downloadCard() {
   const expiry   = new Date(new Date().setFullYear(now.getFullYear()+2))
                      .toLocaleDateString('en-NG', {day:'2-digit',month:'short',year:'numeric'});
 
-  const cardHtml = `<!DOCTYPE html>
-<html><head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Member ID — ${data.fullName||'Member'}</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  const cardMarkup = `
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:#07070E;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 16px;font-family:'DM Sans',sans-serif;color:#F0EDE6}
@@ -534,9 +534,7 @@ function downloadCard() {
 
   /* QR */
   .qr-wrap{position:absolute;bottom:18px;right:20px;width:52px;height:52px}
-  @media print{body{background:#fff;padding:0} .card,.card-back{box-shadow:none;border-color:#ccc} .church-name,.member-id,.dept,.detail-lbl{color:#8B6914!important} .name,.back-val{color:#111!important} .detail,.back-lbl,.sig-line,.verse{color:#555!important} .verified{color:#2A8060!important}}
 </style>
-</head><body>
 <h1>GLOBAL HARVEST OUTER RINGROAD — MEMBER IDENTIFICATION</h1>
 
 <div class="card">
@@ -587,14 +585,31 @@ function downloadCard() {
   <div class="sig-line">${data.fullName||'Member Signature'}</div>
   <div class="verse">"For I know the plans I have for you…" — Jeremiah 29:11</div>
 </div>
+`;
 
-</body></html>`;
+  const exportNode = document.createElement('div');
+  exportNode.style.position = 'fixed';
+  exportNode.style.left = '-99999px';
+  exportNode.style.top = '0';
+  exportNode.style.width = '430px';
+  exportNode.style.background = '#07070E';
+  exportNode.style.padding = '24px 20px';
+  exportNode.innerHTML = cardMarkup;
+  document.body.appendChild(exportNode);
 
-  const blob = new Blob([cardHtml], {type:'text/html'});
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = `${(data.fullName||'member').replace(/\s+/g,'-')}-GlobalHarvestOuterRingroad-ID.html`;
-  a.click();
+  try {
+    const canvas = await html2canvas(exportNode, {
+      backgroundColor: '#07070E',
+      scale: 2,
+      useCORS: true
+    });
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `${(data.fullName||'member').replace(/\s+/g,'-')}-GlobalHarvestOuterRingroad-ID.png`;
+    a.click();
+  } finally {
+    exportNode.remove();
+  }
 }
 
 async function submitRegistration() {
@@ -637,6 +652,10 @@ async function submitRegistration() {
 }
 
 function triggerPhotoUpload() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
   document.getElementById('photoUploadInput').click();
 }
 

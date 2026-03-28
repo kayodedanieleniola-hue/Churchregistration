@@ -332,6 +332,7 @@
   .social-bar {
     display:flex; align-items:center; justify-content:center;
     gap:28px; padding:48px;
+    flex-wrap:wrap;
     border-top:1px solid var(--border);
     opacity:0; animation: fadeUp 0.8s 2s forwards;
   }
@@ -575,7 +576,7 @@
   .camera-sub { font-size:.82rem; color:var(--text-muted); margin-bottom:40px; }
 
   .camera-viewport {
-    width:300px; height:360px;
+    width:min(300px, 100%); height:360px;
     border-radius:20px;
     position:relative; overflow:hidden;
     border:2px solid var(--border);
@@ -997,10 +998,39 @@
     .nav-links { display:none; }
     .hero { padding:60px 20px 60px; }
     .facilities { padding:40px 20px; }
+    .facilities-heading { font-size:1.9rem; }
+    .social-bar { padding:28px 20px 36px; gap:16px; }
+    .social-link { width:calc(50% - 8px); justify-content:center; }
+    #screen-form { padding:36px 16px 40px; }
+    .progress-bar-wrap { width:100%; overflow-x:auto; padding-bottom:8px; }
     .form-box { padding:28px 20px 48px; }
-    .form-nav { padding:0 20px; }
+    .form-nav {
+      position:sticky;
+      bottom:0;
+      padding:16px 0 0;
+      margin-top:18px;
+      justify-content:space-between;
+      background:linear-gradient(180deg, rgba(17,17,24,0), rgba(17,17,24,0.95) 35%);
+    }
+    .nav-btn { padding:12px 18px; font-size:.72rem; }
     .two-col { grid-template-columns:1fr; }
+    .camera-viewport { height:320px; }
+    .idcard-header h2 { font-size:1.75rem; }
+    .card-3d-scene { transform:scale(.9); transform-origin:top center; margin-bottom:-16px; }
     .card-3d-inner { width:300px; height:190px; }
     .card-body { gap:12px; }
     .card-photo-wrap { width:56px; height:68px; }
+    .idcard-actions { flex-direction:column; width:100%; }
+    .idcard-actions .btn-gold,
+    .idcard-actions .btn-outline { width:100%; justify-content:center; }
+  }
+
+  @media (max-width:420px) {
+    .hero-title { font-size:2.45rem; }
+    .hero-sub { font-size:.94rem; }
+    .social-link { width:100%; }
+    .form-box { padding:24px 16px 40px; border-radius:14px; }
+    .camera-viewport { height:280px; }
+    .captured-preview img { width:120px !important; height:146px !important; }
+    .card-3d-scene { transform:scale(.82); margin-bottom:-34px; }
   }
