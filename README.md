@@ -1,33 +1,7 @@
 # Churchregistration
 
-Flask-based church registration system for Global Harvest Outer Ringroad.
+Churchregistration is a Flask-based church membership registration application built for Global Harvest Outer Ringroad. It is designed to collect member information through a guided public registration flow, capture or upload member photos, and generate recoverable membership ID cards.
 
-## Features
+The system stores registration records in a CSV file and saves member photos as JPG files, making the project lightweight and easy to manage without a traditional database. It also includes a protected admin dashboard where church staff can review registrations, monitor activity, download the CSV record file, and recover member ID cards whenever needed.
 
-- Public registration flow
-- Photo capture with upload fallback
-- CSV-backed registration storage
-- Member photos saved as JPG files in `data/photos`
-- Protected admin dashboard
-- Recoverable member ID card page
-- Render deployment config
-
-## Local Run
-
-```bash
-python -m pip install -r requirements.txt
-python app.py
-```
-
-Admin login defaults:
-
-- Username: `admin`
-- Password: `change-me`
-
-Set these environment variables before production deployment:
-
-- `SECRET_KEY`
-- `ADMIN_USERNAME`
-- `ADMIN_PASSWORD`
-- `DATA_DIR`
-- `CSV_BACKUP_PATH`
+The application was structured to keep church data accessible and portable. Instead of tying records to a database server, it keeps membership data in simple file-based storage so registrations, photos, and backup records can be retained and moved easily as the project grows.
