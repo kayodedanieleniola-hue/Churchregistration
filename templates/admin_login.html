@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | Global Harvest Outer Ringroad</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin-auth-body">
+  <main class="admin-auth-shell">
+    <section class="admin-auth-card">
+      <p class="eyebrow">Admin Access</p>
+      <h1>Global Harvest Outer Ringroad</h1>
+      <p class="auth-copy">Sign in to view registrations, recent activity, and membership trends.</p>
+
+      {% if error %}
+      <div class="auth-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" class="auth-form">
+        <label>
+          <span>Username</span>
+          <input type="text" name="username" autocomplete="username" required>
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+
+        <button type="submit">Open Dashboard</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

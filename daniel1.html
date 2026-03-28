@@ -1,0 +1,2243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grace Harbour Church — Member Registration</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dark: #8A6A20;
+    --deep: #0A0A0F;
+    --deep2: #111118;
+    --panel: #16161F;
+    --panel2: #1E1E2A;
+    --text: #F0EDE6;
+    --text-muted: #9B9894;
+    --accent: #7B6FE8;
+    --success: #4ECBA8;
+    --border: rgba(201,168,76,0.18);
+    --glass: rgba(22,22,31,0.85);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    width:100%; height:100%;
+    background: var(--deep);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ─── SCREENS ─── */
+  .screen {
+    position: fixed; inset:0;
+    opacity:0; pointer-events:none;
+    transition: opacity 0.6s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .screen.active { opacity:1; pointer-events:all; }
+
+  /* ════════════════════════════════════
+     LOADER
+  ════════════════════════════════════ */
+  #screen-loader {
+    background: var(--deep);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    z-index:100;
+  }
+
+  .loader-ripple {
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(201,168,76,0.08) 0%, transparent 70%);
+    animation: loaderPulse 2s ease-in-out infinite;
+  }
+  @keyframes loaderPulse {
+    0%,100%{ transform:scale(1); opacity:.6; }
+    50%{ transform:scale(1.3); opacity:1; }
+  }
+
+  .loader-cross {
+    width:60px; height:60px; position:relative;
+    margin-bottom:36px; z-index:2;
+  }
+  .loader-cross::before,
+  .loader-cross::after {
+    content:''; position:absolute;
+    background: linear-gradient(180deg, var(--gold-light), var(--gold-dark));
+    border-radius:4px;
+    animation: crossGrow 0.8s ease forwards;
+    transform-origin: center;
+  }
+  .loader-cross::before { width:6px; height:0; left:27px; top:0; }
+  .loader-cross::after  { width:0; height:6px; left:0; top:27px; }
+  @keyframes crossGrow {
+    to { height:60px; width:6px; }
+  }
+  .loader-cross::after { animation-name: crossGrowH; }
+  @keyframes crossGrowH {
+    to { width:60px; height:6px; }
+  }
+
+  .loader-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size:1.6rem; font-weight:300;
+    letter-spacing:0.04em;
+    color: var(--gold-light);
+    z-index:2; text-align:center;
+    min-height:2.4rem;
+  }
+  .loader-sub {
+    font-size:0.8rem; color:var(--text-muted);
+    letter-spacing:0.2em; text-transform:uppercase;
+    margin-top:12px; z-index:2;
+    opacity:0; animation: fadeIn 1s 1.5s forwards;
+  }
+
+  .loader-bar {
+    width:200px; height:2px;
+    background: rgba(201,168,76,0.15);
+    border-radius:2px; margin-top:32px;
+    overflow:hidden; z-index:2;
+  }
+  .loader-bar-fill {
+    height:100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+    border-radius:2px;
+    animation: barFill 2.8s ease forwards;
+  }
+  @keyframes barFill { from{width:0} to{width:100%} }
+
+  /* ════════════════════════════════════
+     LANDING
+  ════════════════════════════════════ */
+  #screen-landing {
+    background: var(--deep);
+    min-height:100vh;
+  }
+
+  .landing-bg {
+    position:fixed; inset:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201,168,76,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 80% at 90% 50%, rgba(123,111,232,0.05) 0%, transparent 50%);
+  }
+
+  .landing-grid {
+    position:fixed; inset:0; pointer-events:none; opacity:.04;
+    background-image:
+      linear-gradient(var(--gold) 1px, transparent 1px),
+      linear-gradient(90deg, var(--gold) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* NAV */
+  .nav {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 28px 60px;
+    position:relative; z-index:10;
+    border-bottom:1px solid var(--border);
+    backdrop-filter:blur(10px);
+    opacity:0; animation: slideDown 0.8s 0.3s ease forwards;
+  }
+  @keyframes slideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+
+  .nav-logo {
+    display:flex; align-items:center; gap:12px;
+  }
+  .nav-logo-icon {
+    width:36px; height:36px; position:relative;
+  }
+  .nav-logo-icon::before,
+  .nav-logo-icon::after {
+    content:''; position:absolute;
+    background: linear-gradient(180deg, var(--gold-light), var(--gold-dark));
+    border-radius:3px;
+  }
+  .nav-logo-icon::before { width:4px; height:36px; left:16px; top:0; }
+  .nav-logo-icon::after  { width:36px; height:4px; left:0; top:16px; }
+
+  .nav-logo-text { font-family:'Cinzel', serif; font-size:.95rem; letter-spacing:.1em; color:var(--gold-light); }
+  .nav-logo-sub  { font-size:.65rem; color:var(--text-muted); letter-spacing:.15em; text-transform:uppercase; margin-top:1px; }
+
+  .nav-links { display:flex; gap:32px; }
+  .nav-links a {
+    color:var(--text-muted); text-decoration:none;
+    font-size:.82rem; letter-spacing:.1em; text-transform:uppercase;
+    transition: color .3s;
+  }
+  .nav-links a:hover { color:var(--gold-light); }
+
+  /* HERO */
+  .hero {
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center;
+    padding: 100px 40px 80px;
+    position:relative; z-index:2;
+  }
+
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 18px;
+    border:1px solid var(--border);
+    border-radius:100px;
+    font-size:.72rem; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:32px;
+    opacity:0; animation: fadeUp 0.8s 0.5s forwards;
+  }
+  .hero-badge-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:var(--gold);
+    animation: badgePulse 2s infinite;
+  }
+  @keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .hero-title {
+    font-family:'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight:300; line-height:1.05;
+    letter-spacing:-.01em;
+    opacity:0; animation: fadeUp 0.9s 0.7s forwards;
+  }
+  .hero-title em { font-style:italic; color:var(--gold-light); }
+
+  .hero-divider {
+    width:80px; height:1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin:28px auto;
+    opacity:0; animation: fadeUp 0.8s 0.9s forwards;
+  }
+
+  .hero-sub {
+    font-size:1.05rem; color:var(--text-muted);
+    line-height:1.7; max-width:520px;
+    font-weight:300;
+    opacity:0; animation: fadeUp 0.8s 1.1s forwards;
+  }
+
+  .hero-cta {
+    margin-top:44px;
+    opacity:0; animation: fadeUp 0.8s 1.3s forwards;
+  }
+
+  .btn-primary {
+    display:inline-flex; align-items:center; gap:12px;
+    padding:16px 44px;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    color: var(--deep);
+    font-family:'DM Sans', sans-serif;
+    font-size:.85rem; font-weight:600;
+    letter-spacing:.12em; text-transform:uppercase;
+    border:none; border-radius:4px;
+    cursor:pointer;
+    transition: transform .3s, box-shadow .3s;
+    position:relative; overflow:hidden;
+  }
+  .btn-primary::before {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    opacity:0; transition: opacity .3s;
+  }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(201,168,76,0.3); }
+  .btn-primary:hover::before { opacity:1; }
+  .btn-primary span { position:relative; z-index:1; }
+  .btn-primary svg { position:relative; z-index:1; transition: transform .3s; }
+  .btn-primary:hover svg { transform:translateX(4px); }
+
+  /* FACILITY CARDS */
+  .facilities {
+    padding: 80px 60px;
+    position:relative; z-index:2;
+  }
+  .facilities-title {
+    font-family:'Cinzel', serif;
+    font-size:.75rem; letter-spacing:.25em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:8px;
+    opacity:0; animation: fadeUp 0.8s 1.4s forwards;
+  }
+  .facilities-heading {
+    font-family:'Cormorant Garamond', serif;
+    font-size:2.4rem; font-weight:300;
+    margin-bottom:48px;
+    opacity:0; animation: fadeUp 0.8s 1.6s forwards;
+  }
+
+  .cards-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap:24px;
+    opacity:0; animation: fadeUp 0.9s 1.7s forwards;
+  }
+
+  .facility-card {
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:var(--panel);
+    position:relative;
+    height:320px;
+    cursor:pointer;
+    transition: transform .4s ease, box-shadow .4s ease;
+  }
+  .facility-card:hover { transform:translateY(-6px); box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+
+  .card-img {
+    width:100%; height:100%;
+    object-fit:cover;
+    transition: transform .6s ease;
+  }
+  .facility-card:hover .card-img { transform:scale(1.08); }
+
+  /* Gradient overlay */
+  .card-overlay {
+    position:absolute; inset:0;
+    background: linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.3) 60%, transparent 100%);
+  }
+
+  .card-slide-panel {
+    position:absolute; top:0; right:-100%;
+    width:55%; height:100%;
+    background: linear-gradient(180deg, rgba(201,168,76,0.15), rgba(10,10,15,0.9));
+    backdrop-filter:blur(12px);
+    border-left:1px solid var(--border);
+    padding:24px 20px;
+    display:flex; flex-direction:column; justify-content:center;
+    transition: right .4s cubic-bezier(.4,0,.2,1);
+  }
+  .facility-card:hover .card-slide-panel { right:0; }
+
+  .card-icon {
+    font-size:2rem; margin-bottom:12px;
+  }
+  .card-slide-title {
+    font-family:'Cinzel', serif;
+    font-size:.8rem; letter-spacing:.15em;
+    color:var(--gold-light); margin-bottom:8px;
+  }
+  .card-slide-desc {
+    font-size:.78rem; color:var(--text-muted);
+    line-height:1.6;
+  }
+
+  .card-bottom {
+    position:absolute; bottom:0; left:0; right:0;
+    padding:20px;
+  }
+  .card-label {
+    font-family:'Cinzel', serif;
+    font-size:.8rem; letter-spacing:.1em;
+    color:var(--gold-light);
+  }
+  .card-sub { font-size:.72rem; color:var(--text-muted); margin-top:4px; }
+
+  /* SOCIAL */
+  .social-bar {
+    display:flex; align-items:center; justify-content:center;
+    gap:28px; padding:48px;
+    border-top:1px solid var(--border);
+    opacity:0; animation: fadeUp 0.8s 2s forwards;
+  }
+  .social-link {
+    display:flex; align-items:center; gap:8px;
+    color:var(--text-muted); text-decoration:none;
+    font-size:.78rem; letter-spacing:.1em; text-transform:uppercase;
+    transition: color .3s;
+  }
+  .social-link:hover { color:var(--gold-light); }
+  .social-icon {
+    width:36px; height:36px;
+    border:1px solid var(--border);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color .3s, background .3s;
+  }
+  .social-link:hover .social-icon {
+    border-color:var(--gold);
+    background:rgba(201,168,76,0.1);
+  }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* ════════════════════════════════════
+     FORM SCREEN
+  ════════════════════════════════════ */
+  #screen-form {
+    background: var(--deep2);
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center;
+    padding:60px 20px 120px;
+  }
+
+  .form-header {
+    text-align:center; margin-bottom:48px;
+  }
+  .form-step-label {
+    font-size:.72rem; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:8px;
+  }
+  .form-title {
+    font-family:'Cormorant Garamond', serif;
+    font-size:2.2rem; font-weight:300;
+  }
+
+  /* Progress */
+  .progress-bar-wrap {
+    display:flex; align-items:center; gap:0;
+    margin-bottom:48px;
+  }
+  .progress-step {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .progress-circle {
+    width:36px; height:36px; border-radius:50%;
+    border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.75rem; color:var(--text-muted);
+    transition: all .4s;
+    position:relative; z-index:1;
+  }
+  .progress-step.active .progress-circle {
+    border-color:var(--gold);
+    background:rgba(201,168,76,0.15);
+    color:var(--gold);
+  }
+  .progress-step.done .progress-circle {
+    border-color:var(--success);
+    background:rgba(78,203,168,0.15);
+    color:var(--success);
+  }
+  .progress-step-label { font-size:.65rem; color:var(--text-muted); letter-spacing:.1em; white-space:nowrap; }
+  .progress-step.active .progress-step-label { color:var(--gold); }
+
+  .progress-line {
+    flex:1; height:1px;
+    background:var(--border);
+    margin:0 6px;
+    position:relative; top:-12px;
+    min-width:40px;
+    transition: background .4s;
+  }
+  .progress-line.done { background:var(--gold-dark); }
+
+  /* Form box */
+  .form-box {
+    width:100%; max-width:580px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:40px 40px 48px;
+    position:relative;
+  }
+
+  .form-step { display:none; }
+  .form-step.active { display:block; }
+
+  .greeting-banner {
+    background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(123,111,232,0.08));
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px 18px;
+    margin-bottom:28px;
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.2rem; color:var(--gold-light);
+    display:none;
+  }
+  .greeting-banner.visible { display:block; }
+
+  .field-group { margin-bottom:24px; position:relative; }
+
+  .field-label {
+    position:absolute; left:16px; top:16px;
+    font-size:.83rem; color:var(--text-muted);
+    pointer-events:none;
+    transition: all .25s ease;
+    background:var(--panel);
+    padding:0 4px;
+  }
+
+  .field-input, .field-select, .field-textarea {
+    width:100%; background:var(--panel2);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;
+    padding:18px 16px 10px;
+    color:var(--text);
+    font-family:'DM Sans', sans-serif;
+    font-size:.9rem;
+    transition: border-color .3s, box-shadow .3s;
+    outline:none;
+    -webkit-appearance:none;
+  }
+  .field-textarea { min-height:90px; resize:vertical; }
+  .field-select { cursor:pointer; }
+  .field-select option { background:var(--panel2); }
+
+  .field-input:focus,
+  .field-select:focus,
+  .field-textarea:focus {
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(201,168,76,0.12);
+  }
+
+  .field-input:focus ~ .field-label,
+  .field-input:not(:placeholder-shown) ~ .field-label,
+  .field-select:focus ~ .field-label,
+  .field-select:not([value=""]):valid ~ .field-label,
+  .field-textarea:focus ~ .field-label,
+  .field-textarea:not(:placeholder-shown) ~ .field-label {
+    top:-8px; font-size:.7rem; color:var(--gold);
+  }
+
+  .field-note {
+    font-size:.72rem; color:var(--text-muted);
+    margin-top:6px; padding-left:4px;
+  }
+  .field-note.highlight { color:var(--gold); }
+  .field-error {
+    font-size:.72rem; color:#E87070;
+    margin-top:6px; padding-left:4px;
+    display:none;
+  }
+  .field-group.error .field-input { border-color:#E87070; }
+  .field-group.error .field-error { display:block; }
+
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+  /* Radio group */
+  .radio-group { display:flex; gap:12px; flex-wrap:wrap; }
+  .radio-btn {
+    flex:1; min-width:90px;
+    padding:10px 14px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:.8rem; color:var(--text-muted);
+    cursor:pointer; text-align:center;
+    transition: all .25s;
+    background:var(--panel2);
+  }
+  .radio-btn.selected {
+    border-color:var(--gold);
+    background:rgba(201,168,76,0.12);
+    color:var(--gold-light);
+  }
+
+  /* NAV BUTTONS */
+  .form-nav {
+    position:fixed; bottom:32px; left:0; right:0;
+    display:flex; justify-content:space-between;
+    padding:0 calc(50% - 290px);
+    z-index:20;
+    pointer-events:none;
+  }
+
+  .nav-btn {
+    pointer-events:all;
+    display:flex; align-items:center; gap:8px;
+    padding:14px 28px;
+    border-radius:100px;
+    font-size:.8rem; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    border:none; cursor:pointer;
+    transition: all .3s;
+  }
+
+  .nav-btn-next {
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    color:var(--deep);
+    box-shadow:0 8px 30px rgba(201,168,76,0.3);
+  }
+  .nav-btn-next:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(201,168,76,0.4); }
+
+  .nav-btn-prev {
+    background:var(--panel);
+    color:var(--text-muted);
+    border:1px solid var(--border);
+  }
+  .nav-btn-prev:hover { color:var(--text); border-color:var(--gold); }
+  .nav-btn-prev.hidden { opacity:0; pointer-events:none; }
+
+  /* ════════════════════════════════════
+     CAMERA SCREEN
+  ════════════════════════════════════ */
+  #screen-camera {
+    background:var(--deep);
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:40px 20px;
+    text-align:center;
+  }
+
+  .camera-title {
+    font-family:'Cormorant Garamond', serif;
+    font-size:2rem; font-weight:300;
+    margin-bottom:8px;
+  }
+  .camera-sub { font-size:.82rem; color:var(--text-muted); margin-bottom:40px; }
+
+  .camera-viewport {
+    width:300px; height:360px;
+    border-radius:20px;
+    position:relative; overflow:hidden;
+    border:2px solid var(--border);
+    background:var(--panel2);
+    margin-bottom:24px;
+  }
+
+  /* Simulated camera feed: gradient noise */
+  .camera-feed {
+    width:100%; height:100%;
+    background:
+      radial-gradient(ellipse 60% 80% at 50% 40%, rgba(201,168,76,0.06) 0%, transparent 70%),
+      var(--panel2);
+    position:relative;
+    overflow:hidden;
+  }
+  .camera-grain {
+    position:absolute; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+    opacity:.4;
+    animation: grainAnim 0.3s steps(3) infinite;
+  }
+  @keyframes grainAnim {
+    0%{transform:translate(0,0)} 33%{transform:translate(-2%,-2%)} 66%{transform:translate(2%,1%)} 100%{transform:translate(-1%,2%)}
+  }
+
+  /* Face oval */
+  .face-oval {
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-54%);
+    width:140px; height:170px;
+    border:3px solid rgba(201,168,76,0.6);
+    border-radius:50%;
+    box-shadow:0 0 0 2000px rgba(10,10,15,0.5);
+    z-index:2;
+  }
+  .face-oval.scanning { border-color:var(--gold); }
+  .face-oval.captured { border-color:var(--success); }
+
+  /* Corner brackets */
+  .face-oval::before,
+  .face-oval::after {
+    content:''; position:absolute;
+    width:20px; height:20px;
+  }
+  .face-oval::before {
+    top:-3px; left:-3px;
+    border-top:3px solid var(--gold-light);
+    border-left:3px solid var(--gold-light);
+    border-radius:6px 0 0 0;
+  }
+  .face-oval::after {
+    bottom:-3px; right:-3px;
+    border-bottom:3px solid var(--gold-light);
+    border-right:3px solid var(--gold-light);
+    border-radius:0 0 6px 0;
+  }
+
+  /* Scan line */
+  .scan-line {
+    position:absolute; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.8), transparent);
+    top:20%; z-index:3;
+    animation: scanMove 2s ease-in-out infinite;
+    display:none;
+  }
+  .scan-line.active { display:block; }
+  @keyframes scanMove {
+    0%{top:20%; opacity:1} 80%{top:80%; opacity:1} 100%{top:20%; opacity:0}
+  }
+
+  /* Flash */
+  .camera-flash {
+    position:absolute; inset:0;
+    background:white; z-index:10;
+    opacity:0; pointer-events:none;
+  }
+  /* flash handled via JS opacity transitions */
+  @keyframes countPop {
+    0%  { transform:translate(-50%,-50%) scale(0.4); opacity:0; }
+    70% { transform:translate(-50%,-50%) scale(1.15); }
+    100%{ transform:translate(-50%,-50%) scale(1);   opacity:1; }
+  }
+
+  .camera-msg {
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.3rem; color:var(--gold-light);
+    min-height:2rem; margin-bottom:24px;
+    transition: opacity .4s;
+  }
+
+  /* Captured preview */
+  .captured-preview {
+    display:none; flex-direction:column; align-items:center; gap:16px;
+  }
+  .captured-preview.visible { display:flex; }
+
+  .preview-face {
+    width:140px; height:170px;
+    border-radius:50%;
+    background: linear-gradient(135deg, #2A2A38, #1A1A25);
+    border:3px solid var(--success);
+    display:flex; align-items:center; justify-content:center;
+    font-size:4rem;
+    box-shadow:0 0 40px rgba(78,203,168,0.2);
+  }
+
+  .preview-btns { display:flex; gap:12px; }
+  .btn-outline {
+    padding:10px 24px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text-muted);
+    border-radius:100px;
+    font-size:.8rem; cursor:pointer;
+    transition:all .3s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+
+  .btn-success {
+    padding:10px 24px;
+    border:none;
+    background: linear-gradient(135deg, #3A9A80, #4ECBA8);
+    color:var(--deep);
+    border-radius:100px;
+    font-size:.8rem; font-weight:600; cursor:pointer;
+    transition:all .3s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .btn-success:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(78,203,168,0.3); }
+
+  /* ════════════════════════════════════
+     ID CARD SCREEN
+  ════════════════════════════════════ */
+  #screen-idcard {
+    background:var(--deep2);
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-start;
+    padding:60px 20px 120px;
+    text-align:center;
+  }
+
+  .idcard-header {
+    margin-bottom:48px;
+  }
+  .idcard-header .form-step-label { font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+  .idcard-header h2 {
+    font-family:'Cormorant Garamond', serif;
+    font-size:2.2rem; font-weight:300;
+  }
+  .idcard-header p { color:var(--text-muted); margin-top:8px; font-size:.85rem; }
+
+  /* Card 3D container */
+  .card-3d-scene {
+    perspective:1200px;
+    margin-bottom:36px;
+    cursor:pointer;
+  }
+
+  .card-3d-inner {
+    width:340px; height:215px;
+    position:relative;
+    transform-style:preserve-3d;
+    transition: transform 0.8s cubic-bezier(.4,0,.2,1);
+  }
+  .card-3d-inner.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position:absolute; inset:0;
+    border-radius:16px;
+    backface-visibility:hidden;
+    overflow:hidden;
+  }
+
+  /* FRONT */
+  .card-front {
+    background: linear-gradient(135deg, #1A1A28 0%, #0E0E18 50%, #1A1428 100%);
+    border:1px solid rgba(201,168,76,0.3);
+    box-shadow:
+      0 0 0 1px rgba(201,168,76,0.05),
+      0 20px 60px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  /* Gold shimmer */
+  .card-front::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 30% 40%, rgba(201,168,76,0.08), transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 60%, rgba(123,111,232,0.05), transparent 60%);
+    pointer-events:none;
+  }
+
+  /* Geometric pattern */
+  .card-front::after {
+    content:''; position:absolute;
+    bottom:-40px; right:-40px;
+    width:180px; height:180px;
+    border:1px solid rgba(201,168,76,0.08);
+    border-radius:50%;
+    box-shadow:0 0 0 30px rgba(201,168,76,0.04), 0 0 0 60px rgba(201,168,76,0.02);
+    pointer-events:none;
+  }
+
+  .card-front-content {
+    position:relative; z-index:2;
+    padding:18px 20px 16px;
+    height:100%;
+    display:flex; flex-direction:column;
+  }
+
+  .card-church-name {
+    font-family:'Cinzel', serif;
+    font-size:.82rem; font-weight:600; letter-spacing:.18em;
+    color:var(--gold-light);
+    display:flex; align-items:center; gap:8px;
+    text-shadow: 0 0 20px rgba(201,168,76,0.4);
+  }
+  .card-church-name::before,
+  .card-church-name::after {
+    content:''; flex:1; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(201,168,76,0.4));
+  }
+  .card-church-name::after { background:linear-gradient(90deg, rgba(201,168,76,0.4), transparent); }
+
+  .card-body { display:flex; gap:16px; flex:1; margin-top:14px; align-items:flex-start; }
+
+  .card-photo-wrap {
+    width:64px; height:78px;
+    border-radius:8px;
+    border:2px solid rgba(201,168,76,0.4);
+    overflow:hidden; flex-shrink:0;
+    background:var(--panel);
+    display:flex; align-items:center; justify-content:center;
+    font-size:2rem;
+  }
+
+  .card-info { flex:1; text-align:left; }
+  .card-name {
+    font-family:'Cormorant Garamond', serif;
+    font-size:1rem; font-weight:600;
+    color:var(--text); line-height:1.2;
+    margin-bottom:4px;
+  }
+  .card-dept {
+    font-size:.62rem; letter-spacing:.15em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:10px;
+  }
+  .card-details { display:flex; flex-direction:column; gap:3px; }
+  .card-detail { font-size:.62rem; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+  .card-detail-label { color:rgba(201,168,76,0.6); width:40px; flex-shrink:0; }
+
+  .card-footer {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:auto; padding-top:10px;
+    border-top:1px solid rgba(201,168,76,0.12);
+  }
+  .card-id {
+    font-family:'Cinzel', serif;
+    font-size:.65rem; letter-spacing:.1em;
+    color:var(--gold-light);
+  }
+  .card-verified {
+    display:flex; align-items:center; gap:4px;
+    font-size:.58rem; color:var(--success);
+    letter-spacing:.08em;
+  }
+
+  /* BACK */
+  .card-back {
+    background: linear-gradient(135deg, #0E0E18 0%, #1A1A28 100%);
+    border:1px solid rgba(201,168,76,0.2);
+    transform: rotateY(180deg);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .card-back-content {
+    padding:16px 20px;
+    height:100%;
+    display:flex; flex-direction:column;
+    gap:10px;
+  }
+  .card-back-title {
+    font-family:'Cinzel', serif;
+    font-size:.6rem; letter-spacing:.15em;
+    color:var(--gold); text-transform:uppercase;
+    border-bottom:1px solid rgba(201,168,76,0.15);
+    padding-bottom:6px;
+  }
+  .card-back-row { display:flex; justify-content:space-between; }
+  .card-back-field { font-size:.62rem; color:var(--text-muted); }
+  .card-back-value { font-size:.62rem; color:var(--text); }
+  .card-sig-line {
+    border-bottom:1px solid rgba(201,168,76,0.3);
+    margin-top:auto; padding-bottom:4px;
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:.75rem; color:var(--text-muted);
+  }
+  .card-back-msg { font-size:.58rem; color:var(--text-muted); text-align:center; font-style:italic; }
+
+  /* QR code */
+  .qr-block {
+    position:absolute; bottom:14px; right:16px;
+    width:44px; height:44px;
+  }
+  .qr-svg { width:100%; height:100%; }
+
+  .flip-hint {
+    font-size:.72rem; color:var(--text-muted);
+    letter-spacing:.12em; text-transform:uppercase;
+    display:flex; align-items:center; gap:8px;
+    animation: hintPulse 2s ease-in-out infinite;
+  }
+  @keyframes hintPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+  .idcard-actions {
+    display:flex; gap:12px; margin-top:28px; flex-wrap:wrap; justify-content:center;
+  }
+
+  .btn-gold {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:12px 28px;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    color:var(--deep); border:none; border-radius:100px;
+    font-size:.8rem; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    cursor:pointer; transition:all .3s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .btn-gold:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(201,168,76,0.35); }
+
+  /* ════════════════════════════════════
+     SUCCESS SCREEN
+  ════════════════════════════════════ */
+  #screen-success {
+    background:var(--deep);
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center;
+    padding:40px 20px;
+  }
+
+  .success-ring {
+    width:100px; height:100px;
+    border-radius:50%;
+    border:2px solid var(--success);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:32px;
+    position:relative;
+    animation: successRing 0.6s ease forwards;
+    box-shadow:0 0 0 0 rgba(78,203,168,0.3);
+  }
+  @keyframes successRing {
+    0%{ transform:scale(0); opacity:0; }
+    60%{ transform:scale(1.1); }
+    100%{ transform:scale(1); opacity:1; box-shadow:0 0 0 24px rgba(78,203,168,0); }
+  }
+  .success-check {
+    font-size:2.5rem;
+    animation: checkBounce .5s .3s ease both;
+  }
+  @keyframes checkBounce {
+    0%{transform:scale(0)} 80%{transform:scale(1.2)} 100%{transform:scale(1)}
+  }
+
+  .success-title {
+    font-family:'Cormorant Garamond', serif;
+    font-size:3rem; font-weight:300;
+    margin-bottom:12px;
+    opacity:0; animation: fadeUp .8s .3s forwards;
+  }
+  .success-name {
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.4rem; color:var(--gold-light);
+    font-style:italic; margin-bottom:20px;
+    opacity:0; animation: fadeUp .8s .5s forwards;
+  }
+  .success-msg {
+    color:var(--text-muted); max-width:440px;
+    line-height:1.7; font-size:.9rem;
+    opacity:0; animation: fadeUp .8s .7s forwards;
+  }
+  .success-id {
+    margin-top:24px;
+    padding:12px 24px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:100px;
+    font-family:'Cinzel', serif;
+    font-size:.8rem; color:var(--gold-light);
+    letter-spacing:.1em;
+    opacity:0; animation: fadeUp .8s .9s forwards;
+  }
+  .success-divider {
+    width:60px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin:28px auto;
+    opacity:0; animation: fadeUp .8s 1.1s forwards;
+  }
+  .success-footer-msg {
+    font-style:italic; color:var(--text-muted);
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.1rem;
+    opacity:0; animation: fadeUp .8s 1.3s forwards;
+  }
+
+  /* ════════════════════════════════════
+     HELPERS
+  ════════════════════════════════════ */
+  .hidden { display:none !important; }
+
+  /* Mobile */
+  @media (max-width:600px) {
+    .nav { padding:20px; }
+    .nav-links { display:none; }
+    .hero { padding:60px 20px 60px; }
+    .facilities { padding:40px 20px; }
+    .form-box { padding:28px 20px 48px; }
+    .form-nav { padding:0 20px; }
+    .two-col { grid-template-columns:1fr; }
+    .card-3d-inner { width:300px; height:190px; }
+    .card-body { gap:12px; }
+    .card-photo-wrap { width:56px; height:68px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOADER ══════════ -->
+<div id="screen-loader" class="screen active">
+  <div class="loader-ripple"></div>
+  <div class="loader-cross"></div>
+  <div class="loader-text" id="loaderText"></div>
+  <div class="loader-sub">Grace Harbour Church</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- ══════════ LANDING ══════════ -->
+<div id="screen-landing" class="screen">
+  <div class="landing-bg"></div>
+  <div class="landing-grid"></div>
+
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="nav-logo-icon"></div>
+      <div>
+        <div class="nav-logo-text">Grace Harbour</div>
+        <div class="nav-logo-sub">International Church</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#">About</a>
+      <a href="#">Ministries</a>
+      <a href="#">Events</a>
+      <a href="#">Contact</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge"><span class="hero-badge-dot"></span>New Member Registration Open</div>
+    <h1 class="hero-title">Welcome to<br><em>Grace Harbour</em></h1>
+    <div class="hero-divider"></div>
+    <p class="hero-sub">We are glad you came. This is a place of love, purpose, and divine encounter. You belong here — and your journey starts now.</p>
+    <div class="hero-cta">
+      <button class="btn-primary" onclick="startRegistration()">
+        <span>Begin Registration</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="facilities">
+    <div class="facilities-title">Our House</div>
+    <h2 class="facilities-heading">Explore the Ministries</h2>
+    <div class="cards-grid">
+      <div class="facility-card">
+        <div class="card-img" style="background:linear-gradient(135deg,#1a1020,#2a1840);height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">🎶</div>
+        <div class="card-overlay"></div>
+        <div class="card-slide-panel">
+          <div class="card-icon">🎵</div>
+          <div class="card-slide-title">Choir Ministry</div>
+          <div class="card-slide-desc">Voices raised in worship, leading the congregation into the presence of God through music.</div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-label">Choir Ministry</div>
+          <div class="card-sub">Worship & Praise</div>
+        </div>
+      </div>
+      <div class="facility-card">
+        <div class="card-img" style="background:linear-gradient(135deg,#0f1a28,#1a2840);height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">🤝</div>
+        <div class="card-overlay"></div>
+        <div class="card-slide-panel">
+          <div class="card-icon">🕊</div>
+          <div class="card-slide-title">Ushering Unit</div>
+          <div class="card-slide-desc">Warm, welcoming ambassadors who ensure every visitor feels the love of God from the moment they arrive.</div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-label">Ushering Unit</div>
+          <div class="card-sub">Hospitality & Welcome</div>
+        </div>
+      </div>
+      <div class="facility-card">
+        <div class="card-img" style="background:linear-gradient(135deg,#1a200f,#283820);height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">📸</div>
+        <div class="card-overlay"></div>
+        <div class="card-slide-panel">
+          <div class="card-icon">🎬</div>
+          <div class="card-slide-title">Media Team</div>
+          <div class="card-slide-desc">Capturing God's glory — photography, livestreams, graphics, and digital outreach for the Kingdom.</div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-label">Media Ministry</div>
+          <div class="card-sub">Technology & Broadcast</div>
+        </div>
+      </div>
+      <div class="facility-card">
+        <div class="card-img" style="background:linear-gradient(135deg,#1a1418,#281828);height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">📖</div>
+        <div class="card-overlay"></div>
+        <div class="card-slide-panel">
+          <div class="card-icon">✝️</div>
+          <div class="card-slide-title">Bible Study</div>
+          <div class="card-slide-desc">Deep, systematic teaching of the Word — growing disciples who are rooted and grounded in truth.</div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-label">Bible Study</div>
+          <div class="card-sub">Teaching & Discipleship</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="social-bar">
+    <a href="#" class="social-link">
+      <div class="social-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      </div>
+      Instagram
+    </a>
+    <a href="#" class="social-link">
+      <div class="social-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.74a4.85 4.85 0 0 1-1.01-.05z"/></svg>
+      </div>
+      TikTok
+    </a>
+    <a href="#" class="social-link">
+      <div class="social-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+      </div>
+      Facebook
+    </a>
+  </div>
+</div>
+
+<!-- ══════════ FORM ══════════ -->
+<div id="screen-form" class="screen">
+  <div class="form-header">
+    <div class="form-step-label" id="formStepLabel">Step 1 of 3</div>
+    <h2 class="form-title" id="formStepTitle">Personal Information</h2>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar-wrap">
+    <div class="progress-step active" id="pstep1">
+      <div class="progress-circle">1</div>
+      <div class="progress-step-label">Personal</div>
+    </div>
+    <div class="progress-line" id="pline1"></div>
+    <div class="progress-step" id="pstep2">
+      <div class="progress-circle">2</div>
+      <div class="progress-step-label">Details</div>
+    </div>
+    <div class="progress-line" id="pline2"></div>
+    <div class="progress-step" id="pstep3">
+      <div class="progress-circle">3</div>
+      <div class="progress-step-label">Ministry</div>
+    </div>
+  </div>
+
+  <div class="form-box">
+    <!-- STEP 1 -->
+    <div class="form-step active" id="step1">
+      <div class="greeting-banner" id="greetingBanner">👋 Welcome, <span id="greetingName"></span>!</div>
+
+      <div class="field-group" id="fg-name">
+        <input type="text" class="field-input" id="fullName" placeholder=" " oninput="updateGreeting()">
+        <label class="field-label">Full Name *</label>
+        <div class="field-error">Please enter your full name</div>
+      </div>
+
+      <div class="field-group" id="fg-email">
+        <input type="email" class="field-input" id="email" placeholder=" ">
+        <label class="field-label">Email Address *</label>
+        <div class="field-error">Please enter a valid email</div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="form-step" id="step2">
+      <div class="field-group">
+        <input type="tel" class="field-input" id="phone" placeholder=" " oninput="formatPhone(this)">
+        <label class="field-label">Phone Number *</label>
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <input type="date" class="field-input" id="dob" placeholder=" " onchange="calcAge()">
+          <label class="field-label" style="top:-8px;font-size:.7rem;color:var(--gold)">Date of Birth *</label>
+          <div class="field-note" id="ageDisplay"></div>
+        </div>
+        <div class="field-group">
+          <select class="field-select" id="gender">
+            <option value="" disabled selected></option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+          <label class="field-label">Gender *</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <input type="text" class="field-input" id="address" placeholder=" ">
+        <label class="field-label">Home Address *</label>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="form-step" id="step3">
+      <div class="two-col">
+        <div class="field-group">
+          <select class="field-select" id="department">
+            <option value="" disabled selected></option>
+            <option>Choir</option>
+            <option>Ushering</option>
+            <option>Media</option>
+            <option>Children's Ministry</option>
+            <option>Youth Ministry</option>
+            <option>Prayer Team</option>
+            <option>Evangelism</option>
+            <option>Protocol</option>
+            <option>Drama & Arts</option>
+            <option>None for now</option>
+          </select>
+          <label class="field-label">Department</label>
+        </div>
+        <div class="field-group">
+          <select class="field-select" id="marital">
+            <option value="" disabled selected></option>
+            <option>Single</option>
+            <option>Married</option>
+            <option>Divorced</option>
+            <option>Widowed</option>
+          </select>
+          <label class="field-label">Marital Status</label>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <select class="field-select" id="stateOrigin">
+            <option value="" disabled selected></option>
+            <option>Abia</option><option>Adamawa</option><option>Akwa Ibom</option><option>Anambra</option><option>Bauchi</option><option>Bayelsa</option><option>Benue</option><option>Borno</option><option>Cross River</option><option>Delta</option><option>Ebonyi</option><option>Edo</option><option>Ekiti</option><option>Enugu</option><option>FCT – Abuja</option><option>Gombe</option><option>Imo</option><option>Jigawa</option><option>Kaduna</option><option>Kano</option><option>Katsina</option><option>Kebbi</option><option>Kogi</option><option>Kwara</option><option>Lagos</option><option>Nasarawa</option><option>Niger</option><option>Ogun</option><option>Ondo</option><option>Osun</option><option>Oyo</option><option>Plateau</option><option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option><option>Zamfara</option>
+          </select>
+          <label class="field-label">State of Origin</label>
+        </div>
+        <div class="field-group">
+          <select class="field-select" id="nationality">
+            <option value="Nigerian" selected>Nigerian</option>
+            <option>Ghanaian</option><option>American</option><option>British</option><option>South African</option><option>Kenyan</option><option>Other</option>
+          </select>
+          <label class="field-label" style="top:-8px;font-size:.7rem;color:var(--gold)">Nationality</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <input type="text" class="field-input" id="occupation" placeholder=" ">
+        <label class="field-label">Occupation</label>
+      </div>
+
+      <div class="field-group" style="margin-bottom:8px">
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;">First time in church?</div>
+        <div class="radio-group" id="firstTimeGroup">
+          <div class="radio-btn" onclick="selectRadio('firstTime','Yes',this)">Yes</div>
+          <div class="radio-btn" onclick="selectRadio('firstTime','No',this)">No</div>
+        </div>
+      </div>
+
+      <div class="field-group hidden" id="inviterGroup">
+        <input type="text" class="field-input" id="inviter" placeholder=" ">
+        <label class="field-label">Who invited you?</label>
+      </div>
+
+      <div class="field-group">
+        <textarea class="field-textarea field-input" id="whyJoined" placeholder=" "></textarea>
+        <label class="field-label">Why did you join?</label>
+      </div>
+
+      <div class="field-group">
+        <textarea class="field-textarea field-input" id="prayerRequest" placeholder=" " style="min-height:70px"></textarea>
+        <label class="field-label">Prayer Request (optional)</label>
+      </div>
+
+      <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px;margin-top:4px;font-family:'Cinzel',serif;letter-spacing:.1em">NEXT OF KIN</div>
+      <div class="two-col">
+        <div class="field-group">
+          <input type="text" class="field-input" id="nokName" placeholder=" ">
+          <label class="field-label">Full Name *</label>
+        </div>
+        <div class="field-group">
+          <input type="tel" class="field-input" id="nokPhone" placeholder=" " oninput="formatPhone(this)">
+          <label class="field-label">Phone Number *</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV BUTTONS -->
+  <div class="form-nav" id="formNav">
+    <button class="nav-btn nav-btn-prev hidden" id="btnPrev" onclick="prevStep()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Previous
+    </button>
+    <button class="nav-btn nav-btn-next" id="btnNext" onclick="nextStep()">
+      Next
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ CAMERA ══════════ -->
+<div id="screen-camera" class="screen">
+  <h2 class="camera-title">Photo Capture</h2>
+  <p class="camera-sub" id="cameraSub">Allow camera access to take your member photo</p>
+
+  <!-- Permission / error state -->
+  <div id="cameraError" style="display:none;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:20px">
+    <div style="font-size:3rem">📷</div>
+    <p style="color:var(--text-muted);font-size:.88rem;max-width:300px" id="cameraErrorMsg">Camera access was denied. Please allow camera permission and try again.</p>
+    <button class="btn-gold" onclick="initCamera()">Try Again</button>
+  </div>
+
+  <!-- Live viewport -->
+  <div class="camera-viewport" id="cameraViewport" style="position:relative;overflow:hidden">
+    <video id="cameraVideo" autoplay playsinline muted
+      style="width:100%;height:100%;object-fit:cover;border-radius:18px;display:block"></video>
+
+    <!-- Face oval + scan line -->
+    <div class="face-oval" id="faceOval"></div>
+    <div class="scan-line" id="scanLine"></div>
+
+    <!-- Countdown bubble -->
+    <div id="countdownBubble" style="
+      display:none;
+      position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      width:72px;height:72px;border-radius:50%;
+      background:rgba(201,168,76,0.92);
+      color:#0A0A0F;font-family:'Cinzel',serif;
+      font-size:2rem;font-weight:700;
+      align-items:center;justify-content:center;
+      z-index:10;
+      box-shadow:0 0 0 6px rgba(201,168,76,0.3);
+      animation: countPop .35s ease;
+    "></div>
+
+    <!-- Flash -->
+    <div class="camera-flash" id="cameraFlash"></div>
+    <!-- Hidden canvas -->
+    <canvas id="captureCanvas" style="display:none"></canvas>
+  </div>
+
+  <!-- Status message + flip -->
+  <div id="cameraControls" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+    <div class="camera-msg" id="cameraMsg">Starting camera…</div>
+    <button class="btn-outline" id="switchCamBtn" onclick="switchCamera()" style="display:none;padding:8px 20px;font-size:.78rem">
+      🔄 Flip Camera
+    </button>
+  </div>
+
+  <!-- Preview after capture -->
+  <div class="captured-preview" id="capturedPreview">
+    <img id="previewImg" style="width:140px;height:170px;object-fit:cover;border-radius:12px;border:3px solid var(--success);box-shadow:0 0 30px rgba(78,203,168,0.25)" src="" alt="Captured photo">
+    <p style="font-size:.82rem;color:var(--success)">✓ Photo captured!</p>
+    <div class="preview-btns">
+      <button class="btn-outline" onclick="retakePhoto()">Retake</button>
+      <button class="btn-success" onclick="goToIdCard()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ID CARD ══════════ -->
+<div id="screen-idcard" class="screen">
+  <div class="idcard-header">
+    <div class="form-step-label">Your Member ID</div>
+    <h2>Registration Card</h2>
+    <p>Tap the card to flip • Tilt with mouse/touch</p>
+  </div>
+
+  <div class="card-3d-scene" id="card3DScene" onclick="flipCard()" onmousemove="tiltCard(event)" onmouseleave="resetTilt()">
+    <div class="card-3d-inner" id="card3DInner">
+
+      <!-- FRONT -->
+      <div class="card-face card-front">
+        <div class="card-front-content">
+          <div class="card-church-name">Grace Harbour International Church</div>
+          <div class="card-body">
+            <div class="card-photo-wrap" id="cardPhoto">🧑</div>
+            <div class="card-info">
+              <div class="card-name" id="cardName">Full Name</div>
+              <div class="card-dept" id="cardDept">Member</div>
+              <div class="card-details">
+                <div class="card-detail"><span class="card-detail-label">Age</span><span id="cardAge">—</span></div>
+                <div class="card-detail"><span class="card-detail-label">Phone</span><span id="cardPhone">—</span></div>
+                <div class="card-detail"><span class="card-detail-label">Email</span><span id="cardEmail" style="font-size:.55rem">—</span></div>
+                <div class="card-detail"><span class="card-detail-label">Addr.</span><span id="cardAddr" style="font-size:.55rem">—</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="card-id" id="cardMemberId">GH-LAG-2026-0001</div>
+            <div class="card-verified">✦ VERIFIED MEMBER</div>
+          </div>
+        </div>
+        <!-- QR code (SVG pattern) -->
+        <div class="qr-block">
+          <svg class="qr-svg" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="44" height="44" fill="#0A0A0F" rx="4"/>
+            <rect x="4" y="4" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+            <rect x="7" y="7" width="8" height="8" fill="#C9A84C" rx="1"/>
+            <rect x="26" y="4" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+            <rect x="29" y="7" width="8" height="8" fill="#C9A84C" rx="1"/>
+            <rect x="4" y="26" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+            <rect x="7" y="29" width="8" height="8" fill="#C9A84C" rx="1"/>
+            <rect x="26" y="26" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="32" y="26" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="36" y="30" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="26" y="32" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="32" y="36" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="20" y="20" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="20" y="4" width="2" height="8" fill="#C9A84C" rx=".5"/>
+            <rect x="4" y="20" width="8" height="2" fill="#C9A84C" rx=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- BACK -->
+      <div class="card-face card-back">
+        <div class="card-back-content">
+          <div class="card-back-title">Next of Kin &amp; Church Info</div>
+          <div class="card-back-row"><span class="card-back-field">Next of Kin</span><span class="card-back-value" id="backNokName">—</span></div>
+          <div class="card-back-row"><span class="card-back-field">NOK Phone</span><span class="card-back-value" id="backNokPhone">—</span></div>
+          <div class="card-back-row" style="margin-top:4px;"><span class="card-back-field">Nationality</span><span class="card-back-value" id="backNationality">Nigerian</span></div>
+          <div class="card-back-row"><span class="card-back-field">State</span><span class="card-back-value" id="backState">—</span></div>
+          <div class="card-back-row" style="margin-top:6px;border-top:1px solid rgba(201,168,76,0.1);padding-top:6px;"><span class="card-back-field">Issued</span><span class="card-back-value" id="backIssued">—</span></div>
+          <div class="card-back-row"><span class="card-back-field">Expires</span><span class="card-back-value" id="backExpiry">—</span></div>
+          <div class="card-back-row"><span class="card-back-field">Church Line</span><span class="card-back-value">+234 800 GRACE</span></div>
+          <div class="card-sig-line" id="backSig">Member Signature</div>
+          <div class="card-back-msg">"For I know the plans I have for you…" — Jer. 29:11</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flip-hint">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+    Tap to flip card
+  </div>
+
+  <div class="idcard-actions">
+    <button class="btn-outline" onclick="goBack()">← Edit Info</button>
+    <button class="btn-gold" onclick="downloadCard()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Download Card
+    </button>
+    <button class="btn-gold" onclick="goToSuccess()" style="background:linear-gradient(135deg,#2A7A60,#4ECBA8)">
+      Confirm &amp; Complete
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ SUCCESS ══════════ -->
+<div id="screen-success" class="screen">
+  <div class="success-ring"><span class="success-check">✓</span></div>
+  <h1 class="success-title">Registration Complete!</h1>
+  <div class="success-name" id="successName">Welcome to the family</div>
+  <p class="success-msg" id="successMsg">Your membership has been confirmed and your ID card has been generated. You are now a valued member of Grace Harbour International Church.</p>
+  <div class="success-id" id="successIdDisplay">GH-LAG-2026-0001</div>
+  <div class="success-divider"></div>
+  <div class="success-footer-msg">"You are no longer a stranger, but a fellow citizen with the saints…"</div>
+  <div id="emailStatus" style="margin-top:24px;font-size:.78rem;color:var(--text-muted);max-width:400px;text-align:center;line-height:1.6;opacity:0;animation:fadeUp .8s 1.5s forwards"></div>
+</div>
+
+<!-- ════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════ -->
+<script>
+// ─── STATE ───
+const data = {};
+let currentStep = 1;
+const totalSteps = 3;
+let isFlipped = false;
+
+// ─── LOADER ───
+const loaderLines = [
+  'Welcome…',
+  'We are glad you came…',
+  'Preparing your worship experience…'
+];
+
+function typeText(el, text, cb) {
+  el.textContent = '';
+  let i = 0;
+  const t = setInterval(() => {
+    el.textContent += text[i++];
+    if (i >= text.length) { clearInterval(t); setTimeout(cb || (()=>{}), 400); }
+  }, 50);
+}
+
+(function runLoader() {
+  const el = document.getElementById('loaderText');
+  let idx = 0;
+  function next() {
+    if (idx >= loaderLines.length) {
+      setTimeout(() => showScreen('screen-landing'), 600);
+      return;
+    }
+    typeText(el, loaderLines[idx++], () => setTimeout(next, 300));
+  }
+  setTimeout(next, 600);
+})();
+
+// ─── SCREEN MANAGEMENT ───
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ─── LANDING ───
+function startRegistration() {
+  showScreen('screen-form');
+  updateFormUI();
+}
+
+// ─── FORM STEPS ───
+const stepTitles = ['Personal Information', 'Contact & Details', 'Ministry & Background'];
+
+function updateFormUI() {
+  document.getElementById('formStepLabel').textContent = `Step ${currentStep} of ${totalSteps}`;
+  document.getElementById('formStepTitle').textContent = stepTitles[currentStep-1];
+
+  document.querySelectorAll('.form-step').forEach((s,i) => {
+    s.classList.toggle('active', i+1 === currentStep);
+  });
+
+  // Progress
+  [1,2,3].forEach(i => {
+    const ps = document.getElementById('pstep'+i);
+    ps.classList.remove('active','done');
+    if (i < currentStep) ps.classList.add('done');
+    else if (i === currentStep) ps.classList.add('active');
+
+    const circle = ps.querySelector('.progress-circle');
+    circle.textContent = i < currentStep ? '✓' : i;
+  });
+  [1,2].forEach(i => {
+    const pl = document.getElementById('pline'+i);
+    pl.classList.toggle('done', i < currentStep);
+  });
+
+  document.getElementById('btnPrev').classList.toggle('hidden', currentStep === 1);
+  document.getElementById('btnNext').textContent = currentStep === totalSteps ? 'Proceed to Photo' : 'Next';
+  const arrow = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+  document.getElementById('btnNext').innerHTML = (currentStep === totalSteps ? 'Proceed to Photo ' : 'Next ') + arrow;
+}
+
+function nextStep() {
+  if (!validateStep()) return;
+  collectData();
+  if (currentStep < totalSteps) {
+    currentStep++;
+    updateFormUI();
+    window.scrollTo(0,0);
+  } else {
+    // Go to camera
+    showScreen('screen-camera');
+    startCamera();
+  }
+}
+
+function prevStep() {
+  if (currentStep > 1) { currentStep--; updateFormUI(); window.scrollTo(0,0); }
+}
+
+function validateStep() {
+  let ok = true;
+  if (currentStep === 1) {
+    const name = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    document.getElementById('fg-name').classList.toggle('error', !name);
+    if (!name) ok = false;
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    document.getElementById('fg-email').classList.toggle('error', !emailOk);
+    if (!emailOk) ok = false;
+  }
+  return ok;
+}
+
+function collectData() {
+  if (currentStep === 1) {
+    data.fullName = document.getElementById('fullName').value.trim();
+    data.email = document.getElementById('email').value.trim();
+  }
+  if (currentStep === 2) {
+    data.phone = document.getElementById('phone').value.trim();
+    data.dob = document.getElementById('dob').value;
+    data.age = document.getElementById('ageDisplay').textContent;
+    data.gender = document.getElementById('gender').value;
+    data.address = document.getElementById('address').value.trim();
+  }
+  if (currentStep === 3) {
+    data.department = document.getElementById('department').value || 'None for now';
+    data.marital = document.getElementById('marital').value || '—';
+    data.stateOrigin = document.getElementById('stateOrigin').value || '—';
+    data.nationality = document.getElementById('nationality').value;
+    data.occupation = document.getElementById('occupation').value.trim() || '—';
+    data.firstTime = data.firstTime || 'No';
+    data.inviter = document.getElementById('inviter').value.trim();
+    data.whyJoined = document.getElementById('whyJoined').value.trim();
+    data.prayerRequest = document.getElementById('prayerRequest').value.trim();
+    data.nokName = document.getElementById('nokName').value.trim() || '—';
+    data.nokPhone = document.getElementById('nokPhone').value.trim() || '—';
+  }
+}
+
+// ─── GREETING ───
+function updateGreeting() {
+  const name = document.getElementById('fullName').value.trim();
+  const banner = document.getElementById('greetingBanner');
+  const gn = document.getElementById('greetingName');
+  if (name.length > 1) {
+    const first = name.split(' ')[0];
+    gn.textContent = first;
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+}
+
+// ─── PHONE FORMAT ───
+function formatPhone(el) {
+  let v = el.value.replace(/\D/g,'');
+  if (v.startsWith('0')) v = v.slice(0,11);
+  else v = v.slice(0,10);
+  let f = '';
+  if (v.length <= 4) f = v;
+  else if (v.length <= 7) f = v.slice(0,4)+' '+v.slice(4);
+  else f = v.slice(0,4)+' '+v.slice(4,7)+' '+v.slice(7);
+  el.value = f;
+}
+
+// ─── AGE CALC ───
+function calcAge() {
+  const dob = document.getElementById('dob').value;
+  if (!dob) return;
+  const birth = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  const el = document.getElementById('ageDisplay');
+  el.textContent = `Age: ${age} years old`;
+  el.classList.add('highlight');
+  data.ageNum = age;
+}
+
+// ─── RADIO ───
+function selectRadio(key, val, el) {
+  data[key] = val;
+  el.closest('.radio-group').querySelectorAll('.radio-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  if (key === 'firstTime') {
+    document.getElementById('inviterGroup').classList.toggle('hidden', val !== 'Yes');
+  }
+}
+
+// ─── CAMERA (REAL DEVICE + AUTO CAPTURE) ───
+let mediaStream   = null;
+let facingMode    = 'user';
+let cameraTimers  = [];
+
+function clearCameraTimers() {
+  cameraTimers.forEach(t => clearTimeout(t));
+  cameraTimers = [];
+}
+
+function sched(fn, ms) {
+  const t = setTimeout(fn, ms);
+  cameraTimers.push(t);
+}
+
+async function initCamera() {
+  clearCameraTimers();
+
+  const errDiv   = document.getElementById('cameraError');
+  const viewport = document.getElementById('cameraViewport');
+  const controls = document.getElementById('cameraControls');
+  const preview  = document.getElementById('capturedPreview');
+  const video    = document.getElementById('cameraVideo');
+  const msg      = document.getElementById('cameraMsg');
+  const oval     = document.getElementById('faceOval');
+  const scan     = document.getElementById('scanLine');
+  const countdown= document.getElementById('countdownBubble');
+
+  // Reset UI
+  errDiv.style.display    = 'none';
+  viewport.style.display  = 'block';
+  controls.style.display  = 'flex';
+  preview.classList.remove('visible');
+  oval.className = 'face-oval';
+  scan.classList.remove('active');
+  countdown.style.display = 'none';
+  msg.textContent = 'Starting camera…';
+
+  // Stop old stream
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width:{ ideal:1280 }, height:{ ideal:720 } },
+      audio: false
+    });
+    video.srcObject = mediaStream;
+    await video.play();
+
+    // Show flip button only if multiple cameras exist
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d => d.kind === 'videoinput');
+    document.getElementById('switchCamBtn').style.display = cams.length > 1 ? 'block' : 'none';
+
+    // ── AUTO CAPTURE SEQUENCE ──
+    msg.textContent = 'Align your face within the oval…';
+
+    sched(() => {
+      oval.classList.add('scanning');
+      scan.classList.add('active');
+      msg.textContent = 'Detecting face…';
+    }, 1500);
+
+    sched(() => { msg.textContent = 'Hold still…'; }, 2800);
+
+    sched(() => {
+      msg.textContent = 'Capturing in…';
+      runCountdown(3, () => capturePhoto());
+    }, 3800);
+
+  } catch (err) {
+    viewport.style.display = 'none';
+    controls.style.display = 'none';
+    errDiv.style.display   = 'flex';
+    const el = document.getElementById('cameraErrorMsg');
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      el.textContent = 'Camera permission denied. Tap "Allow" when your browser asks, or enable it in your phone settings, then tap Try Again.';
+    } else if (err.name === 'NotFoundError') {
+      el.textContent = 'No camera found on this device.';
+    } else {
+      el.textContent = `Camera error: ${err.message}`;
+    }
+  }
+}
+
+function runCountdown(n, onDone) {
+  const bubble = document.getElementById('countdownBubble');
+  const msg    = document.getElementById('cameraMsg');
+
+  function tick(num) {
+    if (num === 0) {
+      bubble.style.display = 'none';
+      onDone();
+      return;
+    }
+    // Re-trigger animation by cloning
+    bubble.style.display = 'none';
+    bubble.textContent = num;
+    requestAnimationFrame(() => {
+      bubble.style.display = 'flex';
+      bubble.style.animation = 'none';
+      requestAnimationFrame(() => {
+        bubble.style.animation = 'countPop .35s ease';
+      });
+    });
+    msg.textContent = `Capturing in ${num}…`;
+    sched(() => tick(num - 1), 1000);
+  }
+  tick(n);
+}
+
+function capturePhoto() {
+  const video      = document.getElementById('cameraVideo');
+  const canvas     = document.getElementById('captureCanvas');
+  const flash      = document.getElementById('cameraFlash');
+  const oval       = document.getElementById('faceOval');
+  const scan       = document.getElementById('scanLine');
+  const msg        = document.getElementById('cameraMsg');
+  const viewport   = document.getElementById('cameraViewport');
+  const controls   = document.getElementById('cameraControls');
+  const preview    = document.getElementById('capturedPreview');
+  const previewImg = document.getElementById('previewImg');
+
+  msg.textContent = '📸 Smile!';
+
+  // Flash
+  flash.style.transition = 'none';
+  flash.style.opacity    = '1';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    flash.style.transition = 'opacity 0.55s ease';
+    flash.style.opacity    = '0';
+  }));
+
+  // Draw to canvas
+  canvas.width  = video.videoWidth  || 640;
+  canvas.height = video.videoHeight || 480;
+  const ctx = canvas.getContext('2d');
+  if (facingMode === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  data.photoDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+  // Stop stream
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+
+  oval.classList.remove('scanning');
+  oval.classList.add('captured');
+  scan.classList.remove('active');
+
+  sched(() => {
+    viewport.style.display = 'none';
+    controls.style.display = 'none';
+    previewImg.src = data.photoDataUrl;
+    preview.classList.add('visible');
+  }, 600);
+}
+
+async function switchCamera() {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  await initCamera();
+}
+
+function retakePhoto() {
+  document.getElementById('capturedPreview').classList.remove('visible');
+  document.getElementById('cameraViewport').style.display = 'block';
+  document.getElementById('cameraControls').style.display = 'flex';
+  data.photoDataUrl = null;
+  initCamera();
+}
+
+function startCamera() { initCamera(); }
+
+function goToIdCard() {
+  collectData();
+  populateCard();
+  showScreen('screen-idcard');
+}
+
+// ─── ID CARD ───
+function generateMemberId() {
+  const state = (data.stateOrigin || 'LAG').slice(0,3).toUpperCase();
+  const num = String(Math.floor(Math.random()*9000)+1000);
+  return `GH-${state}-2026-${num}`;
+}
+
+function populateCard() {
+  data.memberId = data.memberId || generateMemberId();
+  const ageStr = data.ageNum ? `${data.ageNum} yrs` : '—';
+
+  document.getElementById('cardName').textContent = data.fullName || '—';
+  document.getElementById('cardDept').textContent = (data.department || 'Member').toUpperCase();
+  document.getElementById('cardAge').textContent = ageStr;
+  document.getElementById('cardPhone').textContent = data.phone || '—';
+  document.getElementById('cardEmail').textContent = data.email || '—';
+  document.getElementById('cardAddr').textContent = (data.address || '—').slice(0,30);
+  document.getElementById('cardMemberId').textContent = data.memberId;
+
+  // Show real photo if captured, else emoji fallback
+  const photoWrap = document.getElementById('cardPhoto');
+  if (data.photoDataUrl) {
+    photoWrap.innerHTML = `<img src="${data.photoDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" alt="Member photo">`;
+  } else {
+    photoWrap.textContent = '🧑';
+  }
+
+  // Back
+  document.getElementById('backNokName').textContent = data.nokName || '—';
+  document.getElementById('backNokPhone').textContent = data.nokPhone || '—';
+  document.getElementById('backNationality').textContent = data.nationality || 'Nigerian';
+  document.getElementById('backState').textContent = data.stateOrigin || '—';
+
+  const now = new Date();
+  const issued = now.toLocaleDateString('en-NG', {day:'2-digit',month:'short',year:'numeric'});
+  const expiry = new Date(now.setFullYear(now.getFullYear()+2)).toLocaleDateString('en-NG', {day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('backIssued').textContent = issued;
+  document.getElementById('backExpiry').textContent = expiry;
+  document.getElementById('backSig').textContent = data.fullName || 'Member Signature';
+
+  document.getElementById('successName').textContent = data.fullName ? `Welcome, ${data.fullName.split(' ')[0]}!` : 'Welcome to the family!';
+  document.getElementById('successIdDisplay').textContent = data.memberId;
+  document.getElementById('successMsg').textContent =
+    `Your membership has been confirmed, ${data.fullName?.split(' ')[0] || 'dear friend'}. Your ID card (${data.memberId}) has been generated. You are now a valued member of Grace Harbour International Church. See you Sunday!`;
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('card3DInner').classList.toggle('flipped', isFlipped);
+}
+
+function tiltCard(e) {
+  const scene = document.getElementById('card3DScene');
+  const inner = document.getElementById('card3DInner');
+  const rect = scene.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width - 0.5;
+  const y = (e.clientY - rect.top)  / rect.height - 0.5;
+  const rotY = isFlipped ? 180 + x*12 : x*12;
+  const rotX = -y * 8;
+  inner.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
+}
+
+function resetTilt() {
+  const inner = document.getElementById('card3DInner');
+  inner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+}
+
+function downloadCard() {
+  const photo = data.photoDataUrl
+    ? `<img src="${data.photoDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" alt="photo">`
+    : `<span style="font-size:2.8rem">🧑</span>`;
+
+  const now      = new Date();
+  const issued   = now.toLocaleDateString('en-NG', {day:'2-digit',month:'short',year:'numeric'});
+  const expiry   = new Date(new Date().setFullYear(now.getFullYear()+2))
+                     .toLocaleDateString('en-NG', {day:'2-digit',month:'short',year:'numeric'});
+
+  const cardHtml = `<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Member ID — ${data.fullName||'Member'}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#07070E;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 16px;font-family:'DM Sans',sans-serif;color:#F0EDE6}
+  h1{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.25em;color:#C9A84C;margin-bottom:28px;text-align:center;opacity:.7}
+
+  /* CARD FRONT */
+  .card{
+    width:100%;max-width:380px;
+    background:linear-gradient(135deg,#1A1A28 0%,#0E0E18 55%,#1A1428 100%);
+    border:1px solid rgba(201,168,76,0.35);
+    border-radius:18px;padding:22px 24px 20px;
+    box-shadow:0 0 0 1px rgba(201,168,76,0.06),0 24px 70px rgba(0,0,0,0.7);
+    position:relative;overflow:hidden;
+    margin-bottom:16px;
+  }
+  .card::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse 80% 60% at 30% 40%,rgba(201,168,76,0.07),transparent 60%),
+               radial-gradient(ellipse 60% 80% at 80% 60%,rgba(123,111,232,0.05),transparent 60%);
+    pointer-events:none;
+  }
+  .card::after{
+    content:'';position:absolute;bottom:-50px;right:-50px;
+    width:200px;height:200px;border-radius:50%;
+    border:1px solid rgba(201,168,76,0.07);
+    box-shadow:0 0 0 35px rgba(201,168,76,0.04),0 0 0 70px rgba(201,168,76,0.02);
+  }
+
+  .church-name{
+    font-family:'Cinzel',serif;font-size:.82rem;font-weight:600;
+    letter-spacing:.18em;color:#E8C97A;text-align:center;
+    display:flex;align-items:center;gap:10px;margin-bottom:18px;
+    position:relative;z-index:2;
+    text-shadow:0 0 20px rgba(201,168,76,0.4);
+  }
+  .church-name::before,.church-name::after{
+    content:'';flex:1;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5));
+  }
+  .church-name::after{background:linear-gradient(90deg,rgba(201,168,76,0.5),transparent)}
+
+  .body{display:flex;gap:18px;align-items:flex-start;position:relative;z-index:2}
+  .photo-wrap{
+    width:80px;height:95px;border-radius:10px;
+    border:2px solid rgba(201,168,76,0.5);overflow:hidden;flex-shrink:0;
+    background:#16161F;display:flex;align-items:center;justify-content:center;
+  }
+  .photo-wrap img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+  .info{flex:1}
+  .name{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:600;line-height:1.2;margin-bottom:3px}
+  .dept{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:#C9A84C;margin-bottom:12px}
+  .detail{font-size:.7rem;color:#9B9894;display:flex;gap:8px;margin-bottom:5px;align-items:flex-start}
+  .detail-lbl{color:rgba(201,168,76,0.65);min-width:44px;flex-shrink:0;font-size:.65rem}
+
+  .footer{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-top:18px;padding-top:12px;
+    border-top:1px solid rgba(201,168,76,0.15);
+    position:relative;z-index:2;
+  }
+  .member-id{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.1em;color:#E8C97A}
+  .verified{font-size:.62rem;color:#4ECBA8;letter-spacing:.08em}
+
+  /* CARD BACK */
+  .card-back{
+    width:100%;max-width:380px;
+    background:linear-gradient(135deg,#0E0E18,#1A1A28);
+    border:1px solid rgba(201,168,76,0.2);
+    border-radius:18px;padding:22px 24px;
+    box-shadow:0 24px 70px rgba(0,0,0,0.7);
+  }
+  .back-title{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.18em;color:#C9A84C;text-transform:uppercase;border-bottom:1px solid rgba(201,168,76,0.15);padding-bottom:8px;margin-bottom:12px}
+  .back-row{display:flex;justify-content:space-between;margin-bottom:8px}
+  .back-lbl{font-size:.67rem;color:#9B9894}
+  .back-val{font-size:.67rem;color:#F0EDE6}
+  .sig-line{border-bottom:1px solid rgba(201,168,76,0.35);margin-top:16px;padding-bottom:4px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.8rem;color:#9B9894}
+  .verse{font-size:.6rem;color:#9B9894;text-align:center;font-style:italic;margin-top:10px;font-family:'Cormorant Garamond',serif}
+
+  /* QR */
+  .qr-wrap{position:absolute;bottom:18px;right:20px;width:52px;height:52px}
+  @media print{body{background:#fff;padding:0} .card,.card-back{box-shadow:none;border-color:#ccc} .church-name,.member-id,.dept,.detail-lbl{color:#8B6914!important} .name,.back-val{color:#111!important} .detail,.back-lbl,.sig-line,.verse{color:#555!important} .verified{color:#2A8060!important}}
+</style>
+</head><body>
+<h1>GRACE HARBOUR INTERNATIONAL CHURCH — MEMBER IDENTIFICATION</h1>
+
+<div class="card">
+  <div class="church-name">Grace Harbour International Church</div>
+  <div class="body">
+    <div class="photo-wrap">${photo}</div>
+    <div class="info">
+      <div class="name">${data.fullName||'—'}</div>
+      <div class="dept">${(data.department||'Member').toUpperCase()}</div>
+      <div class="detail"><span class="detail-lbl">Age</span>${data.ageNum ? data.ageNum+' years' : '—'}</div>
+      <div class="detail"><span class="detail-lbl">Gender</span>${data.gender||'—'}</div>
+      <div class="detail"><span class="detail-lbl">Phone</span>${data.phone||'—'}</div>
+      <div class="detail"><span class="detail-lbl">Email</span><span style="font-size:.62rem;word-break:break-all">${data.email||'—'}</span></div>
+      <div class="detail"><span class="detail-lbl">Address</span><span style="font-size:.62rem">${data.address||'—'}</span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="member-id">${data.memberId||'GH-LAG-2026-0000'}</div>
+    <div class="verified">✦ VERIFIED MEMBER</div>
+  </div>
+  <div class="qr-wrap">
+    <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="44" height="44" fill="#0A0A0F" rx="4"/>
+      <rect x="4" y="4" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+      <rect x="7" y="7" width="8" height="8" fill="#C9A84C" rx="1"/>
+      <rect x="26" y="4" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+      <rect x="29" y="7" width="8" height="8" fill="#C9A84C" rx="1"/>
+      <rect x="4" y="26" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+      <rect x="7" y="29" width="8" height="8" fill="#C9A84C" rx="1"/>
+      <rect x="26" y="26" width="4" height="4" fill="#C9A84C" rx=".5"/>
+      <rect x="32" y="26" width="4" height="4" fill="#C9A84C" rx=".5"/>
+      <rect x="36" y="30" width="4" height="4" fill="#C9A84C" rx=".5"/>
+      <rect x="26" y="32" width="4" height="4" fill="#C9A84C" rx=".5"/>
+      <rect x="32" y="36" width="4" height="4" fill="#C9A84C" rx=".5"/>
+    </svg>
+  </div>
+</div>
+
+<div class="card-back" style="position:relative">
+  <div class="back-title">Next of Kin &amp; Church Information</div>
+  <div class="back-row"><span class="back-lbl">Next of Kin</span><span class="back-val">${data.nokName||'—'}</span></div>
+  <div class="back-row"><span class="back-lbl">NOK Phone</span><span class="back-val">${data.nokPhone||'—'}</span></div>
+  <div class="back-row"><span class="back-lbl">Nationality</span><span class="back-val">${data.nationality||'Nigerian'}</span></div>
+  <div class="back-row"><span class="back-lbl">State of Origin</span><span class="back-val">${data.stateOrigin||'—'}</span></div>
+  <div class="back-row"><span class="back-lbl">Marital Status</span><span class="back-val">${data.marital||'—'}</span></div>
+  <div class="back-row" style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(201,168,76,0.12)"><span class="back-lbl">Date Issued</span><span class="back-val">${issued}</span></div>
+  <div class="back-row"><span class="back-lbl">Expiry Date</span><span class="back-val">${expiry}</span></div>
+  <div class="back-row"><span class="back-lbl">Church Line</span><span class="back-val">+234 800 GRACE</span></div>
+  <div class="sig-line">${data.fullName||'Member Signature'}</div>
+  <div class="verse">"For I know the plans I have for you…" — Jeremiah 29:11</div>
+</div>
+
+</body></html>`;
+
+  const blob = new Blob([cardHtml], {type:'text/html'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `${(data.fullName||'member').replace(/\s+/g,'-')}-GraceHarbour-ID.html`;
+  a.click();
+}
+
+// ─── SEND DATA TO EMAIL VIA EMAILJS ───
+function sendToEmail() {
+  // ── SETUP INSTRUCTIONS ──
+  // 1. Go to https://www.emailjs.com and create a FREE account
+  // 2. Add an Email Service (Gmail) → copy your SERVICE ID
+  // 3. Create an Email Template → copy your TEMPLATE ID
+  //    In the template body use these variables:
+  //    {{full_name}}, {{email}}, {{phone}}, {{dob}}, {{gender}},
+  //    {{address}}, {{department}}, {{state}}, {{nationality}},
+  //    {{marital}}, {{occupation}}, {{first_time}}, {{inviter}},
+  //    {{why_joined}}, {{prayer}}, {{nok_name}}, {{nok_phone}}, {{member_id}}
+  // 4. Go to Account → copy your PUBLIC KEY
+  // 5. Replace the three values below:
+  const EMAILJS_PUBLIC_KEY  = 'sAB1mRY66RiFCHqhU';
+  const EMAILJS_SERVICE_ID  = 'service_m34six8';
+  const EMAILJS_TEMPLATE_ID = 'template_xugeq9x';
+
+  if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
+    // Show setup notice on success screen
+    document.getElementById('emailStatus').innerHTML =
+      `⚠️ <strong>Email not sent.</strong> To receive registrations in your Gmail, <a href="https://www.emailjs.com" target="_blank" style="color:var(--gold)">set up EmailJS</a> and add your keys to the code.`;
+    return;
+  }
+
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  const templateParams = {
+    full_name   : data.fullName    || '—',
+    email       : data.email       || '—',
+    phone       : data.phone       || '—',
+    dob         : data.dob         || '—',
+    age         : data.ageNum      ? data.ageNum + ' years' : '—',
+    gender      : data.gender      || '—',
+    address     : data.address     || '—',
+    department  : data.department  || '—',
+    state       : data.stateOrigin || '—',
+    nationality : data.nationality || '—',
+    marital     : data.marital     || '—',
+    occupation  : data.occupation  || '—',
+    first_time  : data.firstTime   || '—',
+    inviter     : data.inviter     || '—',
+    why_joined  : data.whyJoined   || '—',
+    prayer      : data.prayerRequest || '—',
+    nok_name    : data.nokName     || '—',
+    nok_phone   : data.nokPhone    || '—',
+    member_id   : data.memberId    || '—',
+  };
+
+  document.getElementById('emailStatus').textContent = '📨 Sending registration…';
+
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+    .then(() => {
+      document.getElementById('emailStatus').innerHTML =
+        `✅ Registration details sent to your Gmail!`;
+    })
+    .catch(err => {
+      document.getElementById('emailStatus').innerHTML =
+        `❌ Email failed: ${err.text || err}. Check your EmailJS keys.`;
+    });
+}
+
+function goBack() {
+  // Stop camera stream if active
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
+  showScreen('screen-form');
+}
+
+function goToSuccess() {
+  showScreen('screen-success');
+  setTimeout(() => {
+    sendToEmail();
+    sendToTelegram();
+  }, 800);
+}
+
+async function sendToTelegram() {
+  const BOT_TOKEN = '8608549109:AAHcfge7MmrnHTzz3KXmyk0a0py9ohLJkPc';
+  const CHAT_ID   = '7794058197';
+  const API       = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
+  const message = `
+🏛 *GRACE HARBOUR INTERNATIONAL CHURCH*
+✦ NEW MEMBER REGISTRATION ✦
+
+👤 *Full Name:* ${data.fullName || '—'}
+📧 *Email:* ${data.email || '—'}
+📱 *Phone:* ${data.phone || '—'}
+🎂 *Age:* ${data.ageNum ? data.ageNum + ' years' : '—'}
+⚧ *Gender:* ${data.gender || '—'}
+🏠 *Address:* ${data.address || '—'}
+
+⛪ *Department:* ${data.department || '—'}
+🗺 *State:* ${data.stateOrigin || '—'}
+🌍 *Nationality:* ${data.nationality || '—'}
+💍 *Marital Status:* ${data.marital || '—'}
+💼 *Occupation:* ${data.occupation || '—'}
+🆕 *First Timer:* ${data.firstTime || '—'}
+🤝 *Invited By:* ${data.inviter || '—'}
+
+💬 *Why Joined:*
+${data.whyJoined || '—'}
+
+🙏 *Prayer Request:*
+${data.prayerRequest || '—'}
+
+👨‍👩‍👧 *Next of Kin:* ${data.nokName || '—'}
+📞 *NOK Phone:* ${data.nokPhone || '—'}
+
+🪪 *Member ID:* \`${data.memberId || '—'}\`
+✅ *Status:* VERIFIED MEMBER
+  `.trim();
+
+  try {
+    // Send text message first
+    await fetch(`${API}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    });
+
+    // Send photo if captured
+    if (data.photoDataUrl) {
+      // Convert base64 to blob
+      const res  = await fetch(data.photoDataUrl);
+      const blob = await res.blob();
+      const form = new FormData();
+      form.append('chat_id', CHAT_ID);
+      form.append('photo', blob, `${data.fullName || 'member'}.jpg`);
+      form.append('caption', `📸 Photo — ${data.fullName || 'Member'} | ${data.memberId || ''}`);
+
+      await fetch(`${API}/sendPhoto`, {
+        method: 'POST',
+        body: form
+      });
+    }
+
+    document.getElementById('emailStatus').innerHTML =
+      `✅ Registration sent to Telegram & Gmail successfully!`;
+
+  } catch (err) {
+    console.error('Telegram error:', err);
+    document.getElementById('emailStatus').innerHTML =
+      `⚠️ Details saved. Telegram notification failed — check your internet connection.`;
+  }
+}
+
+// Touch tilt for mobile
+document.getElementById('card3DScene').addEventListener('touchmove', function(e) {
+  const touch = e.touches[0];
+  const fakeEvent = { clientX: touch.clientX, clientY: touch.clientY };
+  tiltCard(fakeEvent);
+}, { passive:true });
+</script>
+</body>
+</html>

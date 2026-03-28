@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Global Harvest Outer Ringroad</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin-body">
+  <header class="admin-topbar">
+    <div>
+      <p class="eyebrow">Dashboard</p>
+      <h1>Global Harvest Outer Ringroad</h1>
+    </div>
+    <div class="admin-topbar-actions">
+      <button id="refreshBtn" type="button">Refresh Data</button>
+      <a href="{{ url_for('admin_logout') }}">Logout</a>
+    </div>
+  </header>
+
+  <main class="admin-shell">
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span>Total Members</span>
+        <strong id="totalMembers">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>First Timers</span>
+        <strong id="firstTimers">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Photos Captured</span>
+        <strong id="capturedPhotos">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Last 7 Days</span>
+        <strong id="recentSignups">0</strong>
+      </article>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Latest Registration</h2>
+        </div>
+        <div id="latestRegistration" class="latest-registration empty-state">No registrations yet.</div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Breakdown</h2>
+        </div>
+        <div class="breakdown-grid">
+          <div>
+            <h3>By Gender</h3>
+            <div id="genderBreakdown" class="list-stack empty-state">No data yet.</div>
+          </div>
+          <div>
+            <h3>By Department</h3>
+            <div id="departmentBreakdown" class="list-stack empty-state">No data yet.</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Registrations</h2>
+        <input id="searchInput" type="search" placeholder="Search by name, email, phone, member ID">
+      </div>
+      <div id="tableStatus" class="table-status">Loading registrations...</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Member ID</th>
+              <th>Contact</th>
+              <th>Department</th>
+              <th>First Time</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="registrationsTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

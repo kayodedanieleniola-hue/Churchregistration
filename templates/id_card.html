@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ID Card | {{ registration.full_name }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-soft: #e8c97a;
+      --ink: #0a0a10;
+      --panel: #121624;
+      --panel-soft: #1a1f32;
+      --text: #f2efe8;
+      --muted: #9ea5b3;
+      --success: #4ecba8;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(201, 168, 76, 0.18), transparent 28%),
+        linear-gradient(180deg, #070b12 0%, #0e1521 100%);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .page {
+      width: min(100%, 980px);
+      display: grid;
+      gap: 18px;
+    }
+
+    .page-topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .actions a,
+    .actions button {
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      padding: 12px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card-face {
+      position: relative;
+      border-radius: 24px;
+      padding: 24px;
+      background: linear-gradient(135deg, var(--panel) 0%, #0f1220 58%, #1a1428 100%);
+      border: 1px solid rgba(201,168,76,0.24);
+      box-shadow: 0 26px 60px rgba(0,0,0,0.35);
+      overflow: hidden;
+      min-height: 430px;
+    }
+
+    .card-face::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, rgba(201,168,76,0.15), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.06), transparent 20%);
+      pointer-events: none;
+    }
+
+    .church-name,
+    .card-section-title {
+      position: relative;
+      z-index: 1;
+      color: var(--gold-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.78rem;
+    }
+
+    .card-body {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 104px 1fr;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .photo-wrap {
+      width: 104px;
+      height: 126px;
+      border-radius: 16px;
+      border: 2px solid rgba(201,168,76,0.35);
+      overflow: hidden;
+      background: var(--panel-soft);
+      display: grid;
+      place-items: center;
+      font-size: 2.2rem;
+    }
+
+    .photo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .member-name {
+      font-size: 1.7rem;
+      margin: 0 0 8px;
+    }
+
+    .member-dept {
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.76rem;
+      margin-bottom: 14px;
+    }
+
+    .detail {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .detail strong {
+      color: var(--text);
+    }
+
+    .member-id {
+      position: relative;
+      z-index: 1;
+      margin-top: 28px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(201,168,76,0.16);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      color: var(--gold-soft);
+    }
+
+    .verified {
+      color: var(--success);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+    }
+
+    .back-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .back-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: var(--muted);
+    }
+
+    .back-row strong {
+      color: var(--text);
+      text-align: right;
+    }
+
+    .signature {
+      margin-top: 18px;
+      border-bottom: 1px solid rgba(201,168,76,0.32);
+      padding-bottom: 6px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    @media (max-width: 760px) {
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .actions {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        color: #111111;
+        padding: 0;
+      }
+
+      .page-topbar {
+        display: none;
+      }
+
+      .card-face {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="page-topbar">
+      <div>
+        <div class="church-name">Global Harvest Outer Ringroad</div>
+        <h1 style="margin:8px 0 0">Recovered Member ID Card</h1>
+      </div>
+      <div class="actions">
+        <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+        <button type="button" onclick="window.print()">Print / Save PDF</button>
+      </div>
+    </div>
+
+    <section class="card-grid">
+      <article class="card-face">
+        <div class="church-name">Front</div>
+        <div class="card-body">
+          <div class="photo-wrap">
+            {% if registration.photo_data %}
+            <img src="{{ registration.photo_data }}" alt="{{ registration.full_name }}">
+            {% else %}
+            <span>🧑</span>
+            {% endif %}
+          </div>
+          <div>
+            <h2 class="member-name">{{ registration.full_name }}</h2>
+            <div class="member-dept">{{ registration.department or 'Member' }}</div>
+            <div class="detail"><span>Age</span><strong>{% if registration.age %}{{ registration.age }} years{% else %}-{% endif %}</strong></div>
+            <div class="detail"><span>Gender</span><strong>{{ registration.gender or '-' }}</strong></div>
+            <div class="detail"><span>Phone</span><strong>{{ registration.phone or '-' }}</strong></div>
+            <div class="detail"><span>Email</span><strong>{{ registration.email or '-' }}</strong></div>
+            <div class="detail"><span>Address</span><strong>{{ registration.address or '-' }}</strong></div>
+          </div>
+        </div>
+        <div class="member-id">
+          <strong>{{ registration.member_id or '-' }}</strong>
+          <span class="verified">Verified Member</span>
+        </div>
+      </article>
+
+      <article class="card-face">
+        <div class="card-section-title">Back</div>
+        <div class="back-grid">
+          <div class="back-row"><span>Next of Kin</span><strong>{{ registration.nok_name or '-' }}</strong></div>
+          <div class="back-row"><span>NOK Phone</span><strong>{{ registration.nok_phone or '-' }}</strong></div>
+          <div class="back-row"><span>Nationality</span><strong>{{ registration.nationality or '-' }}</strong></div>
+          <div class="back-row"><span>State of Origin</span><strong>{{ registration.state_origin or '-' }}</strong></div>
+          <div class="back-row"><span>Marital Status</span><strong>{{ registration.marital_status or '-' }}</strong></div>
+          <div class="back-row"><span>Occupation</span><strong>{{ registration.occupation or '-' }}</strong></div>
+          <div class="back-row"><span>Invited By</span><strong>{{ registration.inviter or '-' }}</strong></div>
+          <div class="back-row"><span>Date Registered</span><strong>{{ registration.created_at or '-' }}</strong></div>
+        </div>
+        <div class="signature">{{ registration.full_name }}</div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

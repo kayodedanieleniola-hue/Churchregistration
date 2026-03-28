@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: global-harvest-outer-ringroad
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DATABASE_PATH
+        value: /var/data/registrations.db
+    disk:
+      name: registrations-data
+      mountPath: /var/data
+      sizeGB: 1

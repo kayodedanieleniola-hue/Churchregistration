@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Harvest Outer Ringroad - Member Registration</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<!-- ══════════ LOADER ══════════ -->
+<div id="screen-loader" class="screen active">
+  <div class="loader-ripple"></div>
+  <div class="loader-cross"></div>
+  <div class="loader-text" id="loaderText"></div>
+  <div class="loader-sub">Global Harvest Outer Ringroad</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- ══════════ LANDING ══════════ -->
+<div id="screen-landing" class="screen">
+  <div class="landing-bg"></div>
+  <div class="landing-grid"></div>
+
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="nav-logo-icon"></div>
+      <div>
+        <div class="nav-logo-text">Global Harvest Outer Ringroad</div>
+        <div class="nav-logo-sub">International Church</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#">About</a>
+      <a href="#">Ministries</a>
+      <a href="#">Events</a>
+      <a href="#">Contact</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge"><span class="hero-badge-dot"></span>New Member Registration Open</div>
+    <h1 class="hero-title">Welcome to<br><em>Global Harvest Outer Ringroad</em></h1>
+    <div class="hero-divider"></div>
+    <p class="hero-sub">We are glad you came. This is a place of love, purpose, and divine encounter. You belong here — and your journey starts now.</p>
+    <div class="hero-cta">
+      <button class="btn-primary" onclick="startRegistration()">
+        <span>Begin Registration</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="facilities">
+    <div class="facilities-title">Our House</div>
+    <h2 class="facilities-heading">Explore the Ministries</h2>
+    <div class="cards-grid">
+      <div class="facility-card">
+        <div class="card-img" style="background:linear-gradient(135deg,#1a1020,#2a1840);height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">🎶</div>
+        <div class="card-overlay"></div>
+        <div class="card-slide-panel">
+          <div class="card-icon">🎵</div>
+          <div class="card-slide-title">Choir Ministry</div>
+          <div class="card-slide-desc">Voices raised in worship, leading the congregation into the presence of God through music.</div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-label">Choir Ministry</div>
+          <div class="card-sub">Worship & Praise</div>
+        </div>
+      </div>
+      <div class="facility-card">
+        <div class="card-img" style="background:linear-gradient(135deg,#0f1a28,#1a2840);height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">🤝</div>
+        <div class="card-overlay"></div>
+        <div class="card-slide-panel">
+          <div class="card-icon">🕊</div>
+          <div class="card-slide-title">Ushering Unit</div>
+          <div class="card-slide-desc">Warm, welcoming ambassadors who ensure every visitor feels the love of God from the moment they arrive.</div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-label">Ushering Unit</div>
+          <div class="card-sub">Hospitality & Welcome</div>
+        </div>
+      </div>
+      <div class="facility-card">
+        <div class="card-img" style="background:linear-gradient(135deg,#1a200f,#283820);height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">📸</div>
+        <div class="card-overlay"></div>
+        <div class="card-slide-panel">
+          <div class="card-icon">🎬</div>
+          <div class="card-slide-title">Media Team</div>
+          <div class="card-slide-desc">Capturing God's glory — photography, livestreams, graphics, and digital outreach for the Kingdom.</div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-label">Media Ministry</div>
+          <div class="card-sub">Technology & Broadcast</div>
+        </div>
+      </div>
+      <div class="facility-card">
+        <div class="card-img" style="background:linear-gradient(135deg,#1a1418,#281828);height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">📖</div>
+        <div class="card-overlay"></div>
+        <div class="card-slide-panel">
+          <div class="card-icon">✝️</div>
+          <div class="card-slide-title">Bible Study</div>
+          <div class="card-slide-desc">Deep, systematic teaching of the Word — growing disciples who are rooted and grounded in truth.</div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-label">Bible Study</div>
+          <div class="card-sub">Teaching & Discipleship</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="social-bar">
+    <a href="#" class="social-link">
+      <div class="social-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      </div>
+      Instagram
+    </a>
+    <a href="#" class="social-link">
+      <div class="social-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.74a4.85 4.85 0 0 1-1.01-.05z"/></svg>
+      </div>
+      TikTok
+    </a>
+    <a href="#" class="social-link">
+      <div class="social-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+      </div>
+      Facebook
+    </a>
+  </div>
+</div>
+
+<!-- ══════════ FORM ══════════ -->
+<div id="screen-form" class="screen">
+  <div class="form-header">
+    <div class="form-step-label" id="formStepLabel">Step 1 of 3</div>
+    <h2 class="form-title" id="formStepTitle">Personal Information</h2>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar-wrap">
+    <div class="progress-step active" id="pstep1">
+      <div class="progress-circle">1</div>
+      <div class="progress-step-label">Personal</div>
+    </div>
+    <div class="progress-line" id="pline1"></div>
+    <div class="progress-step" id="pstep2">
+      <div class="progress-circle">2</div>
+      <div class="progress-step-label">Details</div>
+    </div>
+    <div class="progress-line" id="pline2"></div>
+    <div class="progress-step" id="pstep3">
+      <div class="progress-circle">3</div>
+      <div class="progress-step-label">Ministry</div>
+    </div>
+  </div>
+
+  <div class="form-box">
+    <!-- STEP 1 -->
+    <div class="form-step active" id="step1">
+      <div class="greeting-banner" id="greetingBanner">👋 Welcome, <span id="greetingName"></span>!</div>
+
+      <div class="field-group" id="fg-name">
+        <input type="text" class="field-input" id="fullName" placeholder=" " oninput="updateGreeting()">
+        <label class="field-label">Full Name *</label>
+        <div class="field-error">Please enter your full name</div>
+      </div>
+
+      <div class="field-group" id="fg-email">
+        <input type="email" class="field-input" id="email" placeholder=" ">
+        <label class="field-label">Email Address *</label>
+        <div class="field-error">Please enter a valid email</div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="form-step" id="step2">
+      <div class="field-group">
+        <input type="tel" class="field-input" id="phone" placeholder=" " oninput="formatPhone(this)">
+        <label class="field-label">Phone Number *</label>
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <input type="date" class="field-input" id="dob" placeholder=" " onchange="calcAge()">
+          <label class="field-label" style="top:-8px;font-size:.7rem;color:var(--gold)">Date of Birth *</label>
+          <div class="field-note" id="ageDisplay"></div>
+        </div>
+        <div class="field-group">
+          <select class="field-select" id="gender">
+            <option value="" disabled selected></option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+          <label class="field-label">Gender *</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <input type="text" class="field-input" id="address" placeholder=" ">
+        <label class="field-label">Home Address *</label>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="form-step" id="step3">
+      <div class="two-col">
+        <div class="field-group">
+          <select class="field-select" id="department">
+            <option value="" disabled selected></option>
+            <option>Choir</option>
+            <option>Ushering</option>
+            <option>Media</option>
+            <option>Children's Ministry</option>
+            <option>Youth Ministry</option>
+            <option>Prayer Team</option>
+            <option>Evangelism</option>
+            <option>Protocol</option>
+            <option>Drama & Arts</option>
+            <option>None for now</option>
+          </select>
+          <label class="field-label">Department</label>
+        </div>
+        <div class="field-group">
+          <select class="field-select" id="marital">
+            <option value="" disabled selected></option>
+            <option>Single</option>
+            <option>Married</option>
+            <option>Divorced</option>
+            <option>Widowed</option>
+          </select>
+          <label class="field-label">Marital Status</label>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <select class="field-select" id="stateOrigin">
+            <option value="" disabled selected></option>
+            <option>Abia</option><option>Adamawa</option><option>Akwa Ibom</option><option>Anambra</option><option>Bauchi</option><option>Bayelsa</option><option>Benue</option><option>Borno</option><option>Cross River</option><option>Delta</option><option>Ebonyi</option><option>Edo</option><option>Ekiti</option><option>Enugu</option><option>FCT – Abuja</option><option>Gombe</option><option>Imo</option><option>Jigawa</option><option>Kaduna</option><option>Kano</option><option>Katsina</option><option>Kebbi</option><option>Kogi</option><option>Kwara</option><option>Lagos</option><option>Nasarawa</option><option>Niger</option><option>Ogun</option><option>Ondo</option><option>Osun</option><option>Oyo</option><option>Plateau</option><option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option><option>Zamfara</option>
+          </select>
+          <label class="field-label">State of Origin</label>
+        </div>
+        <div class="field-group">
+          <select class="field-select" id="nationality">
+            <option value="Nigerian" selected>Nigerian</option>
+            <option>Ghanaian</option><option>American</option><option>British</option><option>South African</option><option>Kenyan</option><option>Other</option>
+          </select>
+          <label class="field-label" style="top:-8px;font-size:.7rem;color:var(--gold)">Nationality</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <input type="text" class="field-input" id="occupation" placeholder=" ">
+        <label class="field-label">Occupation</label>
+      </div>
+
+      <div class="field-group" style="margin-bottom:8px">
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;">First time in church?</div>
+        <div class="radio-group" id="firstTimeGroup">
+          <div class="radio-btn" onclick="selectRadio('firstTime','Yes',this)">Yes</div>
+          <div class="radio-btn" onclick="selectRadio('firstTime','No',this)">No</div>
+        </div>
+      </div>
+
+      <div class="field-group hidden" id="inviterGroup">
+        <input type="text" class="field-input" id="inviter" placeholder=" ">
+        <label class="field-label">Who invited you?</label>
+      </div>
+
+      <div class="field-group">
+        <textarea class="field-textarea field-input" id="whyJoined" placeholder=" "></textarea>
+        <label class="field-label">Why did you join?</label>
+      </div>
+
+      <div class="field-group">
+        <textarea class="field-textarea field-input" id="prayerRequest" placeholder=" " style="min-height:70px"></textarea>
+        <label class="field-label">Prayer Request (optional)</label>
+      </div>
+
+      <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px;margin-top:4px;font-family:'Cinzel',serif;letter-spacing:.1em">NEXT OF KIN</div>
+      <div class="two-col">
+        <div class="field-group">
+          <input type="text" class="field-input" id="nokName" placeholder=" ">
+          <label class="field-label">Full Name *</label>
+        </div>
+        <div class="field-group">
+          <input type="tel" class="field-input" id="nokPhone" placeholder=" " oninput="formatPhone(this)">
+          <label class="field-label">Phone Number *</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV BUTTONS -->
+  <div class="form-nav" id="formNav">
+    <button class="nav-btn nav-btn-prev hidden" id="btnPrev" onclick="prevStep()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Previous
+    </button>
+    <button class="nav-btn nav-btn-next" id="btnNext" onclick="nextStep()">
+      Next
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ CAMERA ══════════ -->
+<div id="screen-camera" class="screen">
+  <h2 class="camera-title">Photo Capture</h2>
+  <p class="camera-sub" id="cameraSub">Allow camera access to take your member photo</p>
+
+  <!-- Permission / error state -->
+  <div id="cameraError" style="display:none;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:20px">
+    <div style="font-size:3rem">📷</div>
+    <p style="color:var(--text-muted);font-size:.88rem;max-width:300px" id="cameraErrorMsg">Camera access was denied. Please allow camera permission and try again.</p>
+    <div class="preview-btns">
+      <button class="btn-gold" onclick="initCamera()">Try Again</button>
+      <button class="btn-outline" type="button" onclick="triggerPhotoUpload()">Upload Photo Instead</button>
+    </div>
+  </div>
+
+  <!-- Live viewport -->
+  <div class="camera-viewport" id="cameraViewport" style="position:relative;overflow:hidden">
+    <video id="cameraVideo" autoplay playsinline muted
+      style="width:100%;height:100%;object-fit:cover;border-radius:18px;display:block"></video>
+
+    <!-- Face oval + scan line -->
+    <div class="face-oval" id="faceOval"></div>
+    <div class="scan-line" id="scanLine"></div>
+
+    <!-- Countdown bubble -->
+    <div id="countdownBubble" style="
+      display:none;
+      position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      width:72px;height:72px;border-radius:50%;
+      background:rgba(201,168,76,0.92);
+      color:#0A0A0F;font-family:'Cinzel',serif;
+      font-size:2rem;font-weight:700;
+      align-items:center;justify-content:center;
+      z-index:10;
+      box-shadow:0 0 0 6px rgba(201,168,76,0.3);
+      animation: countPop .35s ease;
+    "></div>
+
+    <!-- Flash -->
+    <div class="camera-flash" id="cameraFlash"></div>
+    <!-- Hidden canvas -->
+    <canvas id="captureCanvas" style="display:none"></canvas>
+  </div>
+
+  <!-- Status message + flip -->
+  <div id="cameraControls" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+    <div class="camera-msg" id="cameraMsg">Starting camera…</div>
+    <button class="btn-outline" id="switchCamBtn" onclick="switchCamera()" style="display:none;padding:8px 20px;font-size:.78rem">
+      🔄 Flip Camera
+    </button>
+    <button class="btn-outline" type="button" onclick="triggerPhotoUpload()" style="padding:8px 20px;font-size:.78rem">
+      Upload Photo
+    </button>
+  </div>
+
+  <input id="photoUploadInput" type="file" accept="image/*" capture="user" style="display:none" onchange="handlePhotoUpload(event)">
+
+  <!-- Preview after capture -->
+  <div class="captured-preview" id="capturedPreview">
+    <img id="previewImg" style="width:140px;height:170px;object-fit:cover;border-radius:12px;border:3px solid var(--success);box-shadow:0 0 30px rgba(78,203,168,0.25)" src="" alt="Captured photo">
+    <p style="font-size:.82rem;color:var(--success)">✓ Photo captured!</p>
+    <div class="preview-btns">
+      <button class="btn-outline" onclick="retakePhoto()">Retake</button>
+      <button class="btn-success" onclick="goToIdCard()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ID CARD ══════════ -->
+<div id="screen-idcard" class="screen">
+  <div class="idcard-header">
+    <div class="form-step-label">Your Member ID</div>
+    <h2>Registration Card</h2>
+    <p>Tap the card to flip • Tilt with mouse/touch</p>
+  </div>
+
+  <div class="card-3d-scene" id="card3DScene" onclick="flipCard()" onmousemove="tiltCard(event)" onmouseleave="resetTilt()">
+    <div class="card-3d-inner" id="card3DInner">
+
+      <!-- FRONT -->
+      <div class="card-face card-front">
+        <div class="card-front-content">
+          <div class="card-church-name">Global Harvest Outer Ringroad</div>
+          <div class="card-body">
+            <div class="card-photo-wrap" id="cardPhoto">🧑</div>
+            <div class="card-info">
+              <div class="card-name" id="cardName">Full Name</div>
+              <div class="card-dept" id="cardDept">Member</div>
+              <div class="card-details">
+                <div class="card-detail"><span class="card-detail-label">Age</span><span id="cardAge">—</span></div>
+                <div class="card-detail"><span class="card-detail-label">Phone</span><span id="cardPhone">—</span></div>
+                <div class="card-detail"><span class="card-detail-label">Email</span><span id="cardEmail" style="font-size:.55rem">—</span></div>
+                <div class="card-detail"><span class="card-detail-label">Addr.</span><span id="cardAddr" style="font-size:.55rem">—</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="card-id" id="cardMemberId">GHO-LAG-2026-0001</div>
+            <div class="card-verified">✦ VERIFIED MEMBER</div>
+          </div>
+        </div>
+        <!-- QR code (SVG pattern) -->
+        <div class="qr-block">
+          <svg class="qr-svg" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="44" height="44" fill="#0A0A0F" rx="4"/>
+            <rect x="4" y="4" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+            <rect x="7" y="7" width="8" height="8" fill="#C9A84C" rx="1"/>
+            <rect x="26" y="4" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+            <rect x="29" y="7" width="8" height="8" fill="#C9A84C" rx="1"/>
+            <rect x="4" y="26" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+            <rect x="7" y="29" width="8" height="8" fill="#C9A84C" rx="1"/>
+            <rect x="26" y="26" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="32" y="26" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="36" y="30" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="26" y="32" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="32" y="36" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="20" y="20" width="4" height="4" fill="#C9A84C" rx=".5"/>
+            <rect x="20" y="4" width="2" height="8" fill="#C9A84C" rx=".5"/>
+            <rect x="4" y="20" width="8" height="2" fill="#C9A84C" rx=".5"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- BACK -->
+      <div class="card-face card-back">
+        <div class="card-back-content">
+          <div class="card-back-title">Next of Kin &amp; Church Info</div>
+          <div class="card-back-row"><span class="card-back-field">Next of Kin</span><span class="card-back-value" id="backNokName">—</span></div>
+          <div class="card-back-row"><span class="card-back-field">NOK Phone</span><span class="card-back-value" id="backNokPhone">—</span></div>
+          <div class="card-back-row" style="margin-top:4px;"><span class="card-back-field">Nationality</span><span class="card-back-value" id="backNationality">Nigerian</span></div>
+          <div class="card-back-row"><span class="card-back-field">State</span><span class="card-back-value" id="backState">—</span></div>
+          <div class="card-back-row" style="margin-top:6px;border-top:1px solid rgba(201,168,76,0.1);padding-top:6px;"><span class="card-back-field">Issued</span><span class="card-back-value" id="backIssued">—</span></div>
+          <div class="card-back-row"><span class="card-back-field">Expires</span><span class="card-back-value" id="backExpiry">—</span></div>
+          <div class="card-back-row"><span class="card-back-field">Church Line</span><span class="card-back-value">+234 800 GRACE</span></div>
+          <div class="card-sig-line" id="backSig">Member Signature</div>
+          <div class="card-back-msg">"For I know the plans I have for you…" — Jer. 29:11</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flip-hint">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+    Tap to flip card
+  </div>
+
+  <div class="idcard-actions">
+    <button class="btn-outline" onclick="goBack()">← Edit Info</button>
+    <button class="btn-gold" onclick="downloadCard()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Download Card
+    </button>
+    <button class="btn-gold" onclick="goToSuccess()" style="background:linear-gradient(135deg,#2A7A60,#4ECBA8)">
+      Confirm &amp; Complete
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ SUCCESS ══════════ -->
+<div id="screen-success" class="screen">
+  <div class="success-ring"><span class="success-check">✓</span></div>
+  <h1 class="success-title">Registration Complete!</h1>
+  <div class="success-name" id="successName">Welcome to the family</div>
+  <p class="success-msg" id="successMsg">Your membership has been confirmed and your ID card has been generated. You are now a valued member of Global Harvest Outer Ringroad.</p>
+  <div class="success-id" id="successIdDisplay">GHO-LAG-2026-0001</div>
+  <div class="success-divider"></div>
+  <div class="success-footer-msg">"You are no longer a stranger, but a fellow citizen with the saints…"</div>
+  <div id="emailStatus" style="margin-top:24px;font-size:.78rem;color:var(--text-muted);max-width:400px;text-align:center;line-height:1.6;opacity:0;animation:fadeUp .8s 1.5s forwards"></div>
+</div>
+
+<!-- ════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════ -->
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
