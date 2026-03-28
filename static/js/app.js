@@ -108,6 +108,44 @@ function validateStep() {
     document.getElementById('fg-email').classList.toggle('error', !emailOk);
     if (!emailOk) ok = false;
   }
+  if (currentStep === 2) {
+    const phone = document.getElementById('phone').value.replace(/\D/g, '');
+    const dob = document.getElementById('dob').value;
+    const gender = document.getElementById('gender').value;
+    const address = document.getElementById('address').value.trim();
+
+    const phoneOk = phone.length >= 10;
+    document.getElementById('fg-phone').classList.toggle('error', !phoneOk);
+    if (!phoneOk) ok = false;
+
+    document.getElementById('fg-dob').classList.toggle('error', !dob);
+    if (!dob) ok = false;
+
+    document.getElementById('fg-gender').classList.toggle('error', !gender);
+    if (!gender) ok = false;
+
+    document.getElementById('fg-address').classList.toggle('error', !address);
+    if (!address) ok = false;
+  }
+  if (currentStep === 3) {
+    const department = document.getElementById('department').value;
+    const firstTime = data.firstTime;
+    const nokName = document.getElementById('nokName').value.trim();
+    const nokPhone = document.getElementById('nokPhone').value.replace(/\D/g, '');
+
+    document.getElementById('fg-department').classList.toggle('error', !department);
+    if (!department) ok = false;
+
+    document.getElementById('fg-first-time').classList.toggle('error', !firstTime);
+    if (!firstTime) ok = false;
+
+    document.getElementById('fg-nok-name').classList.toggle('error', !nokName);
+    if (!nokName) ok = false;
+
+    const nokPhoneOk = nokPhone.length >= 10;
+    document.getElementById('fg-nok-phone').classList.toggle('error', !nokPhoneOk);
+    if (!nokPhoneOk) ok = false;
+  }
   return ok;
 }
 

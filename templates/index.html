@@ -179,37 +179,41 @@
 
     <!-- STEP 2 -->
     <div class="form-step" id="step2">
-      <div class="field-group">
+      <div class="field-group" id="fg-phone">
         <input type="tel" class="field-input" id="phone" placeholder=" " oninput="formatPhone(this)">
         <label class="field-label">Phone Number *</label>
+        <div class="field-error">Please enter a valid phone number</div>
       </div>
 
       <div class="two-col">
-        <div class="field-group">
+        <div class="field-group" id="fg-dob">
           <input type="date" class="field-input" id="dob" placeholder=" " onchange="calcAge()">
           <label class="field-label" style="top:-8px;font-size:.7rem;color:var(--gold)">Date of Birth *</label>
           <div class="field-note" id="ageDisplay"></div>
+          <div class="field-error">Please select date of birth</div>
         </div>
-        <div class="field-group">
+        <div class="field-group" id="fg-gender">
           <select class="field-select" id="gender">
             <option value="" disabled selected></option>
             <option>Male</option>
             <option>Female</option>
           </select>
           <label class="field-label">Gender *</label>
+          <div class="field-error">Please select gender</div>
         </div>
       </div>
 
-      <div class="field-group">
+      <div class="field-group" id="fg-address">
         <input type="text" class="field-input" id="address" placeholder=" ">
         <label class="field-label">Home Address *</label>
+        <div class="field-error">Please enter your home address</div>
       </div>
     </div>
 
     <!-- STEP 3 -->
     <div class="form-step" id="step3">
       <div class="two-col">
-        <div class="field-group">
+        <div class="field-group" id="fg-department">
           <select class="field-select" id="department">
             <option value="" disabled selected></option>
             <option>Choir</option>
@@ -223,7 +227,8 @@
             <option>Drama & Arts</option>
             <option>None for now</option>
           </select>
-          <label class="field-label">Department</label>
+          <label class="field-label">Department *</label>
+          <div class="field-error">Please select a department</div>
         </div>
         <div class="field-group">
           <select class="field-select" id="marital">
@@ -259,12 +264,13 @@
         <label class="field-label">Occupation</label>
       </div>
 
-      <div class="field-group" style="margin-bottom:8px">
+      <div class="field-group" style="margin-bottom:8px" id="fg-first-time">
         <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;">First time in church?</div>
         <div class="radio-group" id="firstTimeGroup">
           <div class="radio-btn" onclick="selectRadio('firstTime','Yes',this)">Yes</div>
           <div class="radio-btn" onclick="selectRadio('firstTime','No',this)">No</div>
         </div>
+        <div class="field-error">Please choose Yes or No</div>
       </div>
 
       <div class="field-group hidden" id="inviterGroup">
@@ -284,13 +290,15 @@
 
       <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px;margin-top:4px;font-family:'Cinzel',serif;letter-spacing:.1em">NEXT OF KIN</div>
       <div class="two-col">
-        <div class="field-group">
+        <div class="field-group" id="fg-nok-name">
           <input type="text" class="field-input" id="nokName" placeholder=" ">
           <label class="field-label">Full Name *</label>
+          <div class="field-error">Please enter next of kin name</div>
         </div>
-        <div class="field-group">
+        <div class="field-group" id="fg-nok-phone">
           <input type="tel" class="field-input" id="nokPhone" placeholder=" " oninput="formatPhone(this)">
           <label class="field-label">Phone Number *</label>
+          <div class="field-error">Please enter next of kin phone number</div>
         </div>
       </div>
     </div>
