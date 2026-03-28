@@ -1,5 +1,6 @@
 import base64
 import csv
+import io
 import os
 import re
 from datetime import datetime, timezone
@@ -19,12 +20,14 @@ from flask import (
     url_for,
 )
 from flask_cors import CORS
+from supabase import Client, create_client
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
-PHOTOS_DIR = DATA_DIR / "photos"
-CSV_PATH = Path(os.getenv("CSV_BACKUP_PATH", DATA_DIR / "registrations.csv"))
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "member-photos").strip() or "member-photos"
+EXPORT_FILENAME = "registrations-export.csv"
 
 CSV_COLUMNS = [
     "registration_id",
@@ -47,7 +50,7 @@ CSV_COLUMNS = [
     "nok_name",
     "nok_phone",
     "member_id",
-    "photo_filename",
+    "photo_path",
     "created_at",
 ]
 
@@ -55,14 +58,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
 CORS(app)
 
-
-def ensure_storage():
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
-    if not CSV_PATH.exists():
-        with CSV_PATH.open("w", newline="", encoding="utf-8") as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=CSV_COLUMNS)
-            writer.writeheader()
+supabase_client = None
 
 
 def get_admin_credentials():
@@ -88,6 +84,21 @@ def admin_required(view_func):
     return wrapped
 
 
+def get_supabase() -> Client:
+    global supabase_client
+
+    if supabase_client is not None:
+        return supabase_client
+
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+        raise RuntimeError(
+            "Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY."
+        )
+
+    supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    return supabase_client
+
+
 def get_now_iso():
     return datetime.now(timezone.utc).isoformat()
 
@@ -100,103 +111,13 @@ def normalize_email(value):
     return (value or "").strip().lower()
 
 
-def read_registrations():
-    ensure_storage()
-    with CSV_PATH.open("r", newline="", encoding="utf-8") as csv_file:
-        reader = csv.DictReader(csv_file)
-        rows = [decorate_registration(dict(row)) for row in reader]
-    rows.sort(key=lambda row: (row.get("created_at") or "", row.get("registration_id") or ""), reverse=True)
-    return rows
-
-
-def write_registrations(rows):
-    ensure_storage()
-    clean_rows = [{column: row.get(column, "") for column in CSV_COLUMNS} for row in rows]
-    with CSV_PATH.open("w", newline="", encoding="utf-8") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=CSV_COLUMNS)
-        writer.writeheader()
-        writer.writerows(clean_rows)
-
-
-def append_registration(row):
-    ensure_storage()
-    with CSV_PATH.open("a", newline="", encoding="utf-8") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=CSV_COLUMNS)
-        writer.writerow({column: row.get(column, "") for column in CSV_COLUMNS})
-
-
-def decorate_registration(row):
-    decorated = dict(row)
-    decorated["id"] = int(decorated["registration_id"]) if decorated.get("registration_id") else None
-    photo_filename = decorated.get("photo_filename")
-    decorated["photo_url"] = (
-        url_for("member_photo", filename=photo_filename)
-        if photo_filename
-        else None
-    )
-    return decorated
-
-
-def get_next_registration_id(existing_rows):
-    ids = [int(row["registration_id"]) for row in existing_rows if row.get("registration_id")]
-    return max(ids, default=0) + 1
-
-
-def save_member_photo(photo_data_url, member_id, registration_id):
-    if not photo_data_url:
-        return ""
-
-    match = re.match(r"^data:image\/[a-zA-Z0-9.+-]+;base64,(.+)$", photo_data_url)
-    if not match:
-        raise ValueError("Invalid image data received.")
-
-    image_bytes = base64.b64decode(match.group(1))
-    filename = f"{slugify(member_id or str(registration_id))}-{registration_id}.jpg"
-    file_path = PHOTOS_DIR / filename
-    with file_path.open("wb") as image_file:
-        image_file.write(image_bytes)
-    return filename
-
-
-def get_registration_by_id(registration_id):
-    for row in read_registrations():
-        if row.get("registration_id") == str(registration_id):
-            return row
-    return None
-
-
-def delete_registration_by_id(registration_id):
-    rows = read_registrations()
-    remaining_rows = []
-    removed_row = None
-
-    for row in rows:
-        if row.get("registration_id") == str(registration_id):
-            removed_row = row
-            continue
-        remaining_rows.append(row)
-
-    if removed_row is None:
-        return None
-
-    write_registrations(remaining_rows)
-
-    photo_filename = removed_row.get("photo_filename")
-    if photo_filename:
-        photo_path = PHOTOS_DIR / photo_filename
-        if photo_path.exists():
-            photo_path.unlink()
-
-    return removed_row
-
-
 def normalize_registration_payload(data):
     return {
         "full_name": (data.get("fullName") or "").strip(),
         "email": normalize_email(data.get("email")),
         "phone": data.get("phone") or "",
         "dob": data.get("dob") or "",
-        "age": str(data.get("ageNum") or ""),
+        "age": data.get("ageNum"),
         "gender": data.get("gender") or "",
         "address": data.get("address") or "",
         "department": data.get("department") or "",
@@ -214,28 +135,157 @@ def normalize_registration_payload(data):
     }
 
 
+def decorate_registration(row):
+    decorated = dict(row)
+    decorated["registration_id"] = str(decorated.get("id") or "")
+    decorated["id"] = decorated.get("id")
+    photo_path = decorated.get("photo_path")
+    decorated["photo_url"] = (
+        url_for("member_photo", filename=photo_path)
+        if photo_path
+        else None
+    )
+    return decorated
+
+
+def fetch_registrations():
+    response = (
+        get_supabase()
+        .table("registrations")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return [decorate_registration(row) for row in (response.data or [])]
+
+
+def get_registration_by_id(registration_id):
+    response = (
+        get_supabase()
+        .table("registrations")
+        .select("*")
+        .eq("id", registration_id)
+        .limit(1)
+        .execute()
+    )
+    if not response.data:
+        return None
+    return decorate_registration(response.data[0])
+
+
+def find_by_email(email):
+    response = (
+        get_supabase()
+        .table("registrations")
+        .select("id")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+    return bool(response.data)
+
+
+def find_by_member_id(member_id):
+    response = (
+        get_supabase()
+        .table("registrations")
+        .select("id")
+        .eq("member_id", member_id)
+        .limit(1)
+        .execute()
+    )
+    return bool(response.data)
+
+
+def save_member_photo(photo_data_url, member_id):
+    if not photo_data_url:
+        return ""
+
+    match = re.match(r"^data:image\/[a-zA-Z0-9.+-]+;base64,(.+)$", photo_data_url)
+    if not match:
+        raise ValueError("Invalid image data received.")
+
+    image_bytes = base64.b64decode(match.group(1))
+    path = f"members/{slugify(member_id)}-{int(datetime.now(timezone.utc).timestamp())}.jpg"
+    get_supabase().storage.from_(SUPABASE_BUCKET).upload(
+        path=path,
+        file=image_bytes,
+        file_options={"content-type": "image/jpeg", "upsert": "false"},
+    )
+    return path
+
+
+def delete_photo(photo_path):
+    if not photo_path:
+        return
+    get_supabase().storage.from_(SUPABASE_BUCKET).remove([photo_path])
+
+
+def delete_registration_by_id(registration_id):
+    registration = get_registration_by_id(registration_id)
+    if registration is None:
+        return None
+
+    get_supabase().table("registrations").delete().eq("id", registration_id).execute()
+    delete_photo(registration.get("photo_path"))
+    return registration
+
+
+def build_csv_export(registrations):
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=CSV_COLUMNS)
+    writer.writeheader()
+
+    for row in registrations:
+        writer.writerow(
+            {
+                "registration_id": row.get("id", ""),
+                "full_name": row.get("full_name", ""),
+                "email": row.get("email", ""),
+                "phone": row.get("phone", ""),
+                "dob": row.get("dob", ""),
+                "age": row.get("age", ""),
+                "gender": row.get("gender", ""),
+                "address": row.get("address", ""),
+                "department": row.get("department", ""),
+                "marital_status": row.get("marital_status", ""),
+                "state_origin": row.get("state_origin", ""),
+                "nationality": row.get("nationality", ""),
+                "occupation": row.get("occupation", ""),
+                "first_time": row.get("first_time", ""),
+                "inviter": row.get("inviter", ""),
+                "why_joined": row.get("why_joined", ""),
+                "prayer_request": row.get("prayer_request", ""),
+                "nok_name": row.get("nok_name", ""),
+                "nok_phone": row.get("nok_phone", ""),
+                "member_id": row.get("member_id", ""),
+                "photo_path": row.get("photo_path", ""),
+                "created_at": row.get("created_at", ""),
+            }
+        )
+
+    return output.getvalue().encode("utf-8")
+
+
 def get_storage_summary(registrations):
     latest_registration = registrations[0] if registrations else None
     one_week_ago = datetime.now(timezone.utc).timestamp() - (7 * 24 * 60 * 60)
     recent_signups = 0
-
-    for row in registrations:
-        created_at = row.get("created_at")
-        if not created_at:
-            continue
-        try:
-            parsed = datetime.fromisoformat(created_at)
-        except ValueError:
-            continue
-        if parsed.timestamp() >= one_week_ago:
-            recent_signups += 1
-
     gender_totals = {}
     department_totals = {}
     first_timers = 0
     captured_photos = 0
 
     for row in registrations:
+        created_at = row.get("created_at")
+        if created_at:
+            try:
+                parsed = datetime.fromisoformat(str(created_at).replace("Z", "+00:00"))
+                if parsed.timestamp() >= one_week_ago:
+                    recent_signups += 1
+            except ValueError:
+                pass
+
         gender = (row.get("gender") or "").strip() or "Unspecified"
         department = (row.get("department") or "").strip() or "Unassigned"
         gender_totals[gender] = gender_totals.get(gender, 0) + 1
@@ -243,13 +293,8 @@ def get_storage_summary(registrations):
 
         if (row.get("first_time") or "").strip().lower() == "yes":
             first_timers += 1
-        if row.get("photo_filename"):
+        if row.get("photo_path"):
             captured_photos += 1
-
-    csv_modified_at = datetime.fromtimestamp(
-        CSV_PATH.stat().st_mtime,
-        tz=timezone.utc,
-    ).isoformat()
 
     return {
         "success": True,
@@ -269,13 +314,13 @@ def get_storage_summary(registrations):
             for label, total in sorted(department_totals.items(), key=lambda item: (-item[1], item[0]))[:8]
         ],
         "csv_backup": {
-            "path": str(CSV_PATH),
-            "filename": CSV_PATH.name,
+            "path": "generated-from-supabase",
+            "filename": EXPORT_FILENAME,
             "rows": len(registrations),
-            "modified_at": csv_modified_at,
+            "modified_at": get_now_iso(),
         },
         "database": {
-            "engine": "csv-file",
+            "engine": "supabase-postgres",
         },
     }
 
@@ -302,12 +347,16 @@ def healthcheck():
 @app.route("/media/photos/<path:filename>")
 @admin_required
 def member_photo(filename):
-    safe_path = (PHOTOS_DIR / filename).resolve()
-    if PHOTOS_DIR.resolve() not in safe_path.parents and safe_path != PHOTOS_DIR.resolve():
+    try:
+        file_bytes = get_supabase().storage.from_(SUPABASE_BUCKET).download(filename)
+    except Exception:
         abort(404)
-    if not safe_path.exists():
-        abort(404)
-    return send_from_directory(PHOTOS_DIR, filename)
+
+    return send_file(
+        io.BytesIO(file_bytes),
+        mimetype="image/jpeg",
+        download_name=Path(filename).name,
+    )
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
@@ -356,12 +405,12 @@ def admin_id_card(registration_id):
 @app.route("/admin/backups/registrations.csv")
 @admin_required
 def download_csv_backup():
-    ensure_storage()
+    registrations = fetch_registrations()
     return send_file(
-        CSV_PATH,
+        io.BytesIO(build_csv_export(registrations)),
         mimetype="text/csv",
         as_attachment=True,
-        download_name=CSV_PATH.name,
+        download_name=EXPORT_FILENAME,
     )
 
 
@@ -378,15 +427,14 @@ def register():
         return jsonify({"success": False, "error": "Member ID is required."}), 400
 
     try:
-        existing_rows = read_registrations()
-        if any(row.get("member_id") == registration["member_id"] for row in existing_rows):
+        if find_by_member_id(registration["member_id"]):
             return jsonify(
                 {
                     "success": False,
                     "error": "This member ID already exists. Refresh and try again.",
                 }
             ), 409
-        if any(normalize_email(row.get("email")) == registration["email"] for row in existing_rows):
+        if find_by_email(registration["email"]):
             return jsonify(
                 {
                     "success": False,
@@ -394,20 +442,18 @@ def register():
                 }
             ), 409
 
-        registration_id = get_next_registration_id(existing_rows)
-        photo_filename = save_member_photo(
-            data.get("photoDataUrl"),
-            registration["member_id"],
-            registration_id,
-        )
-
-        saved_row = {
-            "registration_id": str(registration_id),
+        photo_path = save_member_photo(data.get("photoDataUrl"), registration["member_id"])
+        payload = {
             **registration,
-            "photo_filename": photo_filename,
-            "created_at": get_now_iso(),
+            "photo_path": photo_path,
         }
-        append_registration(saved_row)
+        response = (
+            get_supabase()
+            .table("registrations")
+            .insert(payload)
+            .execute()
+        )
+        saved_row = decorate_registration(response.data[0])
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
@@ -415,8 +461,8 @@ def register():
         {
             "success": True,
             "message": "Registration saved successfully.",
-            "registration_id": registration_id,
-            "member_id": registration["member_id"],
+            "registration_id": saved_row["id"],
+            "member_id": saved_row["member_id"],
             "created_at": saved_row["created_at"],
         }
     )
@@ -426,7 +472,7 @@ def register():
 @admin_required
 def get_registrations():
     try:
-        return jsonify({"success": True, "registrations": read_registrations()})
+        return jsonify({"success": True, "registrations": fetch_registrations()})
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
@@ -435,7 +481,7 @@ def get_registrations():
 @admin_required
 def get_stats():
     try:
-        return jsonify(get_storage_summary(read_registrations()))
+        return jsonify(get_storage_summary(fetch_registrations()))
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
@@ -444,7 +490,7 @@ def get_stats():
 @admin_required
 def get_admin_summary():
     try:
-        return jsonify(get_storage_summary(read_registrations()))
+        return jsonify(get_storage_summary(fetch_registrations()))
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
@@ -468,9 +514,6 @@ def delete_registration(registration_id):
         return jsonify({"success": True, "message": "Registration deleted successfully."})
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
-
-
-ensure_storage()
 
 
 if __name__ == "__main__":

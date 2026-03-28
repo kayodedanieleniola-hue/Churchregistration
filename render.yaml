@@ -15,11 +15,9 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
-      - key: DATA_DIR
-        value: /var/data
-      - key: CSV_BACKUP_PATH
-        value: /var/data/registrations.csv
-    disk:
-      name: registrations-storage
-      mountPath: /var/data
-      sizeGB: 1
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: member-photos
