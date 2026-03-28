@@ -584,7 +584,6 @@ function downloadCard() {
   <div class="back-row"><span class="back-lbl">Marital Status</span><span class="back-val">${data.marital||'—'}</span></div>
   <div class="back-row" style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(201,168,76,0.12)"><span class="back-lbl">Date Issued</span><span class="back-val">${issued}</span></div>
   <div class="back-row"><span class="back-lbl">Expiry Date</span><span class="back-val">${expiry}</span></div>
-  <div class="back-row"><span class="back-lbl">Church Line</span><span class="back-val">+234 800 GRACE</span></div>
   <div class="sig-line">${data.fullName||'Member Signature'}</div>
   <div class="verse">"For I know the plans I have for you…" — Jeremiah 29:11</div>
 </div>

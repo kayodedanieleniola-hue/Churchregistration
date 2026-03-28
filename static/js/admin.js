@@ -87,12 +87,34 @@ function renderRegistrations(items) {
           <td>
             <div class="table-actions">
               <a href="/admin/id-card/${item.id}" target="_blank" rel="noopener noreferrer">Open ID Card</a>
+              <button type="button" class="danger-btn" data-delete-id="${item.id}" data-delete-name="${item.full_name || "member"}">Delete</button>
             </div>
           </td>
         </tr>
       `
     )
     .join("");
+}
+
+async function deleteRegistration(registrationId, fullName) {
+  const confirmed = window.confirm(`Delete ${fullName}'s registration? This will remove the saved ID and photo file.`);
+  if (!confirmed) {
+    return;
+  }
+
+  const status = document.getElementById("tableStatus");
+  status.textContent = "Deleting registration...";
+
+  const response = await fetch(`/api/registrations/${registrationId}`, {
+    method: "DELETE",
+  });
+  const payload = await response.json();
+
+  if (!response.ok || !payload.success) {
+    throw new Error(payload.error || "Could not delete registration.");
+  }
+
+  await loadDashboard();
 }
 
 function filterRegistrations(query) {
@@ -162,6 +184,18 @@ async function loadDashboard() {
 document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
 document.getElementById("searchInput").addEventListener("input", (event) => {
   filterRegistrations(event.target.value);
+});
+document.getElementById("registrationsTable").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-delete-id]");
+  if (!button) {
+    return;
+  }
+
+  try {
+    await deleteRegistration(button.dataset.deleteId, button.dataset.deleteName);
+  } catch (error) {
+    document.getElementById("tableStatus").textContent = error.message;
+  }
 });
 
 loadDashboard();

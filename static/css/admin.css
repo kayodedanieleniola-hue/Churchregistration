@@ -316,6 +316,16 @@ tbody tr:hover {
   font-size: 0.78rem;
 }
 
+.danger-btn {
+  border: 1px solid rgba(239, 125, 125, 0.32);
+  background: rgba(239, 125, 125, 0.12);
+  color: #ffd0d0;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
 @media (max-width: 1050px) {
   .stats-grid,
   .dashboard-grid,

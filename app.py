@@ -96,6 +96,10 @@ def slugify(value):
     return re.sub(r"[^a-z0-9]+", "-", (value or "").strip().lower()).strip("-") or "member"
 
 
+def normalize_email(value):
+    return (value or "").strip().lower()
+
+
 def read_registrations():
     ensure_storage()
     with CSV_PATH.open("r", newline="", encoding="utf-8") as csv_file:
@@ -161,10 +165,35 @@ def get_registration_by_id(registration_id):
     return None
 
 
+def delete_registration_by_id(registration_id):
+    rows = read_registrations()
+    remaining_rows = []
+    removed_row = None
+
+    for row in rows:
+        if row.get("registration_id") == str(registration_id):
+            removed_row = row
+            continue
+        remaining_rows.append(row)
+
+    if removed_row is None:
+        return None
+
+    write_registrations(remaining_rows)
+
+    photo_filename = removed_row.get("photo_filename")
+    if photo_filename:
+        photo_path = PHOTOS_DIR / photo_filename
+        if photo_path.exists():
+            photo_path.unlink()
+
+    return removed_row
+
+
 def normalize_registration_payload(data):
     return {
         "full_name": (data.get("fullName") or "").strip(),
-        "email": (data.get("email") or "").strip(),
+        "email": normalize_email(data.get("email")),
         "phone": data.get("phone") or "",
         "dob": data.get("dob") or "",
         "age": str(data.get("ageNum") or ""),
@@ -357,6 +386,13 @@ def register():
                     "error": "This member ID already exists. Refresh and try again.",
                 }
             ), 409
+        if any(normalize_email(row.get("email")) == registration["email"] for row in existing_rows):
+            return jsonify(
+                {
+                    "success": False,
+                    "error": "This email address already has a registration.",
+                }
+            ), 409
 
         registration_id = get_next_registration_id(existing_rows)
         photo_filename = save_member_photo(
@@ -420,6 +456,18 @@ def get_registration(registration_id):
     if registration is None:
         return jsonify({"success": False, "error": "Registration not found."}), 404
     return jsonify({"success": True, "registration": registration})
+
+
+@app.route("/api/registrations/<int:registration_id>", methods=["DELETE"])
+@admin_required
+def delete_registration(registration_id):
+    try:
+        removed = delete_registration_by_id(registration_id)
+        if removed is None:
+            return jsonify({"success": False, "error": "Registration not found."}), 404
+        return jsonify({"success": True, "message": "Registration deleted successfully."})
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
 
 
 ensure_storage()
