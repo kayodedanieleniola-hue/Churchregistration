@@ -4,13 +4,13 @@ let currentStep = 1;
 const totalSteps = 3;
 let isFlipped = false;
 let isSubmitting = false;
-const brandLogoUrl = '/static/branding/logo.jpeg';
+const brandLogoUrl = '/static/branding/logo-transparent.png';
 
 // ─── LOADER ───
 const loaderLines = [
   'Welcome…',
   'We are glad you came…',
-  'Preparing your worship experience…'
+  'Preparing your experience…'
 ];
 
 function typeText(el, text, cb) {
@@ -24,10 +24,30 @@ function typeText(el, text, cb) {
 
 (function runLoader() {
   const el = document.getElementById('loaderText');
+  const wrap = document.getElementById('loaderWrap');
+  const particleHost = document.getElementById('loaderParticles');
   let idx = 0;
+
+  if (particleHost) {
+    const colors = ['#FFD700', '#FF6B2B', '#22C55E', '#1A56DB', '#00C8FF', '#FFFFFF'];
+    for (let i = 0; i < 20; i += 1) {
+      const p = document.createElement('div');
+      const size = Math.random() * 6 + 2;
+      p.className = 'particle';
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDuration = `${Math.random() * 4 + 3}s`;
+      p.style.animationDelay = `${Math.random() * 3}s`;
+      particleHost.appendChild(p);
+    }
+  }
+
   function next() {
     if (idx >= loaderLines.length) {
-      setTimeout(() => showScreen('screen-landing'), 600);
+      wrap.classList.add('fade-out');
+      setTimeout(() => showScreen('screen-landing'), 800);
       return;
     }
     typeText(el, loaderLines[idx++], () => setTimeout(next, 300));
@@ -528,7 +548,7 @@ async function downloadCard() {
   }
 
   .brand-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;position:relative;z-index:2}
-  .brand-logo{width:46px;height:46px;border-radius:12px;object-fit:cover;border:1px solid rgba(17,114,214,0.18);box-shadow:0 8px 24px rgba(17,114,214,0.12)}
+  .brand-logo{width:98px;height:auto;border-radius:0;object-fit:contain;border:0;box-shadow:none}
   .brand-copy{display:flex;flex-direction:column;gap:2px}
   .brand-copy strong{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:#0c3f76}
   .brand-copy span{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:#4c87bf}
@@ -578,7 +598,7 @@ async function downloadCard() {
     backface-visibility:visible !important;
   }
   .back-brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-  .back-brand img{width:42px;height:42px;border-radius:12px;object-fit:cover;border:1px solid rgba(17,114,214,0.16)}
+  .back-brand img{width:92px;height:auto;border-radius:0;object-fit:contain;border:0}
   .back-brand strong{display:block;font-size:.74rem;letter-spacing:.14em;color:#0c3f76;text-transform:uppercase}
   .back-brand span{display:block;font-size:.62rem;letter-spacing:.18em;color:#4c87bf;text-transform:uppercase}
   .back-title{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.18em;color:#147fe3;text-transform:uppercase;border-bottom:1px solid rgba(17,114,214,0.14);padding-bottom:8px;margin-bottom:12px}

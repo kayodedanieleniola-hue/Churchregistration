@@ -56,12 +56,12 @@ body {
 }
 
 .admin-brand-logo {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  border-radius: 18px;
-  border: 1px solid rgba(20, 135, 234, 0.14);
-  box-shadow: 0 12px 32px rgba(20, 135, 234, 0.14);
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
 }
 
 .admin-auth-card .admin-brand-logo {

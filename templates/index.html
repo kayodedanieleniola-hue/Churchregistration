@@ -12,11 +12,25 @@
 <body>
 <!-- ══════════ LOADER ══════════ -->
 <div id="screen-loader" class="screen active">
-  <div class="loader-ripple"></div>
-  <img class="loader-logo" src="{{ url_for('static', filename='branding/logo.jpeg') }}" alt="Global Harvest Outer Ringroad logo">
-  <div class="loader-text" id="loaderText"></div>
-  <div class="loader-sub">Global Harvest Outer Ringroad</div>
-  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <div class="bg-rays"></div>
+  <div class="particles" id="loaderParticles"></div>
+  <div class="loader-wrap" id="loaderWrap">
+    <div class="logo-glow"></div>
+    <div class="logo-img-wrap">
+      <img class="logo-img" src="{{ url_for('static', filename='branding/logo-transparent.png') }}" alt="Global Harvest Outer Ringroad logo">
+      <div class="logo-shine"></div>
+    </div>
+    <div class="loader-text" id="loaderText"></div>
+    <div class="progress-wrap">
+      <div class="progress-fill"></div>
+    </div>
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════ LANDING ══════════ -->
@@ -26,7 +40,7 @@
 
   <nav class="nav">
     <div class="nav-logo">
-      <img class="nav-logo-image" src="{{ url_for('static', filename='branding/logo.jpeg') }}" alt="Global Harvest Outer Ringroad logo">
+      <img class="nav-logo-image" src="{{ url_for('static', filename='branding/logo-transparent.png') }}" alt="Global Harvest Outer Ringroad logo">
       <div>
         <div class="nav-logo-text">Global Harvest Outer Ringroad</div>
         <div class="nav-logo-sub">International Church</div>
@@ -401,7 +415,7 @@
       <div class="card-face card-front">
         <div class="card-front-content">
           <div class="card-brand-head">
-            <img class="card-brand-logo" src="{{ url_for('static', filename='branding/logo.jpeg') }}" alt="Global Harvest Outer Ringroad logo">
+            <img class="card-brand-logo" src="{{ url_for('static', filename='branding/logo-transparent.png') }}" alt="Global Harvest Outer Ringroad logo">
             <div class="card-brand-copy">
               <div class="card-brand-line">Global Harvest Outer Ringroad</div>
               <div class="card-brand-sub">Ibadan</div>
@@ -452,7 +466,7 @@
       <div class="card-face card-back">
         <div class="card-back-content">
           <div class="card-back-brand">
-            <img class="card-back-logo" src="{{ url_for('static', filename='branding/logo.jpeg') }}" alt="Global Harvest Outer Ringroad logo">
+            <img class="card-back-logo" src="{{ url_for('static', filename='branding/logo-transparent.png') }}" alt="Global Harvest Outer Ringroad logo">
             <div>
               <div class="card-back-brand-line">Global Harvest Outer Ringroad</div>
               <div class="card-back-brand-sub">Member Record</div>
