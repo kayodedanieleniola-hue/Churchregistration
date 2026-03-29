@@ -4,6 +4,7 @@ let currentStep = 1;
 const totalSteps = 3;
 let isFlipped = false;
 let isSubmitting = false;
+let hasAutoDownloadedCard = false;
 const brandLogoUrl = '/static/branding/logo-transparent.png';
 
 // ─── LOADER ───
@@ -497,16 +498,10 @@ function resetTilt() {
   inner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
 }
 
-async function downloadCard() {
-  const saved = await submitRegistration();
-  if (!saved) {
-    window.alert('Please complete registration saving before downloading the card.');
-    return;
-  }
-
+async function exportCardPng() {
   if (typeof html2canvas !== 'function') {
     window.alert('PNG export is not available right now. Please refresh and try again.');
-    return;
+    return false;
   }
 
   const photo = data.photoDataUrl
@@ -695,9 +690,18 @@ async function downloadCard() {
     a.download = `${(data.fullName||'member').replace(/\s+/g,'-')}-GlobalHarvestOuterRingroad-ID.png`;
     a.click();
     await recordCardDownload('member');
+    return true;
   } finally {
     exportNode.remove();
   }
+}
+
+async function downloadSavedCard() {
+  if (!data.registrationId) {
+    window.alert('Your registration needs to be completed before the ID card can be downloaded.');
+    return;
+  }
+  await exportCardPng();
 }
 
 async function submitRegistration() {
@@ -822,6 +826,12 @@ async function goToSuccess() {
 
   populateCard();
   showScreen('screen-success');
+  if (!hasAutoDownloadedCard) {
+    hasAutoDownloadedCard = true;
+    setTimeout(() => {
+      downloadSavedCard();
+    }, 500);
+  }
 }
 
 async function recordCardDownload(actor) {

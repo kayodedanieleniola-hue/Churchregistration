@@ -493,10 +493,6 @@
 
   <div class="idcard-actions">
     <button class="btn-outline" onclick="goBack()">← Edit Info</button>
-    <button class="btn-gold" onclick="downloadCard()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-      Download Card
-    </button>
     <button class="btn-gold" onclick="goToSuccess()">
       Confirm &amp; Complete
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -513,6 +509,12 @@
   <div class="success-id" id="successIdDisplay">GHO-LAG-2026-0001</div>
   <div class="success-divider"></div>
   <div class="success-footer-msg">"You are no longer a stranger, but a fellow citizen with the saints…"</div>
+  <div class="idcard-actions" style="margin-top:24px">
+    <button class="btn-gold" onclick="downloadSavedCard()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Download ID Card
+    </button>
+  </div>
   <div id="emailStatus" style="margin-top:24px;font-size:.78rem;color:var(--text-muted);max-width:400px;text-align:center;line-height:1.6;opacity:0;animation:fadeUp .8s 1.5s forwards"></div>
 </div>
 
