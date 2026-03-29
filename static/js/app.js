@@ -4,6 +4,7 @@ let currentStep = 1;
 const totalSteps = 3;
 let isFlipped = false;
 let isSubmitting = false;
+const brandLogoUrl = '/static/branding/logo.jpeg';
 
 // ─── LOADER ───
 const loaderLines = [
@@ -477,6 +478,12 @@ function resetTilt() {
 }
 
 async function downloadCard() {
+  const saved = await submitRegistration();
+  if (!saved) {
+    window.alert('Please complete registration saving before downloading the card.');
+    return;
+  }
+
   if (typeof html2canvas !== 'function') {
     window.alert('PNG export is not available right now. Please refresh and try again.');
     return;
@@ -494,83 +501,92 @@ async function downloadCard() {
   const cardMarkup = `
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#07070E;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 16px;font-family:'DM Sans',sans-serif;color:#F0EDE6}
-  h1{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.25em;color:#C9A84C;margin-bottom:28px;text-align:center;opacity:.7}
+  body{background:linear-gradient(180deg,#f6fbff 0%,#d9edff 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 16px;font-family:'DM Sans',sans-serif;color:#0d2540}
+  h1{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.25em;color:#0f73d8;margin-bottom:28px;text-align:center;opacity:.88}
 
   /* CARD FRONT */
   .card{
     width:100%;max-width:380px;
-    background:linear-gradient(135deg,#1A1A28 0%,#0E0E18 55%,#1A1428 100%);
-    border:1px solid rgba(201,168,76,0.35);
+    background:linear-gradient(145deg,#ffffff 0%,#eef7ff 48%,#d6ecff 100%);
+    border:1px solid rgba(17,114,214,0.22);
     border-radius:18px;padding:22px 24px 20px;
-    box-shadow:0 0 0 1px rgba(201,168,76,0.06),0 24px 70px rgba(0,0,0,0.7);
+    box-shadow:0 12px 35px rgba(7,57,108,0.12),0 30px 70px rgba(7,57,108,0.14);
     position:relative;overflow:hidden;
     margin-bottom:16px;
   }
   .card::before{
     content:'';position:absolute;inset:0;
-    background:radial-gradient(ellipse 80% 60% at 30% 40%,rgba(201,168,76,0.07),transparent 60%),
-               radial-gradient(ellipse 60% 80% at 80% 60%,rgba(123,111,232,0.05),transparent 60%);
+    background:radial-gradient(ellipse 80% 60% at 15% 20%,rgba(20,135,234,0.18),transparent 60%),
+               radial-gradient(ellipse 70% 90% at 85% 80%,rgba(96,181,255,0.22),transparent 60%);
     pointer-events:none;
   }
   .card::after{
     content:'';position:absolute;bottom:-50px;right:-50px;
     width:200px;height:200px;border-radius:50%;
-    border:1px solid rgba(201,168,76,0.07);
-    box-shadow:0 0 0 35px rgba(201,168,76,0.04),0 0 0 70px rgba(201,168,76,0.02);
+    border:1px solid rgba(17,114,214,0.08);
+    box-shadow:0 0 0 35px rgba(17,114,214,0.05),0 0 0 70px rgba(17,114,214,0.03);
   }
+
+  .brand-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;position:relative;z-index:2}
+  .brand-logo{width:46px;height:46px;border-radius:12px;object-fit:cover;border:1px solid rgba(17,114,214,0.18);box-shadow:0 8px 24px rgba(17,114,214,0.12)}
+  .brand-copy{display:flex;flex-direction:column;gap:2px}
+  .brand-copy strong{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:#0c3f76}
+  .brand-copy span{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:#4c87bf}
 
   .church-name{
     font-family:'Cinzel',serif;font-size:.82rem;font-weight:600;
-    letter-spacing:.18em;color:#E8C97A;text-align:center;
+    letter-spacing:.18em;color:#0f73d8;text-align:center;
     display:flex;align-items:center;gap:10px;margin-bottom:18px;
     position:relative;z-index:2;
-    text-shadow:0 0 20px rgba(201,168,76,0.4);
   }
   .church-name::before,.church-name::after{
     content:'';flex:1;height:1px;
-    background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5));
+    background:linear-gradient(90deg,transparent,rgba(17,114,214,0.38));
   }
-  .church-name::after{background:linear-gradient(90deg,rgba(201,168,76,0.5),transparent)}
+  .church-name::after{background:linear-gradient(90deg,rgba(17,114,214,0.38),transparent)}
 
   .body{display:flex;gap:18px;align-items:flex-start;position:relative;z-index:2}
   .photo-wrap{
     width:80px;height:95px;border-radius:10px;
-    border:2px solid rgba(201,168,76,0.5);overflow:hidden;flex-shrink:0;
-    background:#16161F;display:flex;align-items:center;justify-content:center;
+    border:2px solid rgba(17,114,214,0.26);overflow:hidden;flex-shrink:0;
+    background:#f4faff;display:flex;align-items:center;justify-content:center;
   }
   .photo-wrap img{width:100%;height:100%;object-fit:cover;border-radius:8px}
   .info{flex:1}
-  .name{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:600;line-height:1.2;margin-bottom:3px}
-  .dept{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:#C9A84C;margin-bottom:12px}
-  .detail{font-size:.7rem;color:#9B9894;display:flex;gap:8px;margin-bottom:5px;align-items:flex-start}
-  .detail-lbl{color:rgba(201,168,76,0.65);min-width:44px;flex-shrink:0;font-size:.65rem}
+  .name{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:600;line-height:1.2;margin-bottom:3px;color:#0d2540}
+  .dept{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:#147fe3;margin-bottom:12px}
+  .detail{font-size:.7rem;color:#4f6e8c;display:flex;gap:8px;margin-bottom:5px;align-items:flex-start}
+  .detail-lbl{color:#147fe3;min-width:44px;flex-shrink:0;font-size:.65rem}
 
   .footer{
     display:flex;align-items:center;justify-content:space-between;
     margin-top:18px;padding-top:12px;
-    border-top:1px solid rgba(201,168,76,0.15);
+    border-top:1px solid rgba(17,114,214,0.12);
     position:relative;z-index:2;
   }
-  .member-id{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.1em;color:#E8C97A}
-  .verified{font-size:.62rem;color:#4ECBA8;letter-spacing:.08em}
+  .member-id{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.1em;color:#0d4e8d}
+  .verified{font-size:.62rem;color:#147fe3;letter-spacing:.08em}
 
   /* CARD BACK */
   .card-back{
     width:100%;max-width:380px;
-    background:linear-gradient(135deg,#0E0E18,#1A1A28);
-    border:1px solid rgba(201,168,76,0.2);
+    background:linear-gradient(145deg,#ffffff 0%,#edf7ff 48%,#d2e8ff 100%);
+    border:1px solid rgba(17,114,214,0.18);
     border-radius:18px;padding:22px 24px;
-    box-shadow:0 24px 70px rgba(0,0,0,0.7);
+    box-shadow:0 12px 35px rgba(7,57,108,0.12),0 30px 70px rgba(7,57,108,0.14);
     transform:none !important;
     backface-visibility:visible !important;
   }
-  .back-title{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.18em;color:#C9A84C;text-transform:uppercase;border-bottom:1px solid rgba(201,168,76,0.15);padding-bottom:8px;margin-bottom:12px}
+  .back-brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .back-brand img{width:42px;height:42px;border-radius:12px;object-fit:cover;border:1px solid rgba(17,114,214,0.16)}
+  .back-brand strong{display:block;font-size:.74rem;letter-spacing:.14em;color:#0c3f76;text-transform:uppercase}
+  .back-brand span{display:block;font-size:.62rem;letter-spacing:.18em;color:#4c87bf;text-transform:uppercase}
+  .back-title{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.18em;color:#147fe3;text-transform:uppercase;border-bottom:1px solid rgba(17,114,214,0.14);padding-bottom:8px;margin-bottom:12px}
   .back-row{display:flex;justify-content:space-between;margin-bottom:8px}
-  .back-lbl{font-size:.67rem;color:#9B9894}
-  .back-val{font-size:.67rem;color:#F0EDE6}
-  .sig-line{border-bottom:1px solid rgba(201,168,76,0.35);margin-top:16px;padding-bottom:4px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.8rem;color:#9B9894}
-  .verse{font-size:.6rem;color:#9B9894;text-align:center;font-style:italic;margin-top:10px;font-family:'Cormorant Garamond',serif}
+  .back-lbl{font-size:.67rem;color:#4f6e8c}
+  .back-val{font-size:.67rem;color:#0d2540}
+  .sig-line{border-bottom:1px solid rgba(17,114,214,0.3);margin-top:16px;padding-bottom:4px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.8rem;color:#4f6e8c}
+  .verse{font-size:.6rem;color:#4f6e8c;text-align:center;font-style:italic;margin-top:10px;font-family:'Cormorant Garamond',serif}
 
   /* QR */
   .qr-wrap{position:absolute;bottom:18px;right:20px;width:52px;height:52px}
@@ -578,6 +594,13 @@ async function downloadCard() {
 <h1>GLOBAL HARVEST OUTER RINGROAD — MEMBER IDENTIFICATION</h1>
 
 <div class="card">
+  <div class="brand-head">
+    <img class="brand-logo" src="${brandLogoUrl}" alt="logo">
+    <div class="brand-copy">
+      <strong>Global Harvest Outer Ringroad</strong>
+      <span>Ibadan</span>
+    </div>
+  </div>
   <div class="church-name">Global Harvest Outer Ringroad</div>
   <div class="body">
     <div class="photo-wrap">${photo}</div>
@@ -597,30 +620,34 @@ async function downloadCard() {
   </div>
   <div class="qr-wrap">
     <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="44" height="44" fill="#0A0A0F" rx="4"/>
-      <rect x="4" y="4" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
-      <rect x="7" y="7" width="8" height="8" fill="#C9A84C" rx="1"/>
-      <rect x="26" y="4" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
-      <rect x="29" y="7" width="8" height="8" fill="#C9A84C" rx="1"/>
-      <rect x="4" y="26" width="14" height="14" rx="2" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
-      <rect x="7" y="29" width="8" height="8" fill="#C9A84C" rx="1"/>
-      <rect x="26" y="26" width="4" height="4" fill="#C9A84C" rx=".5"/>
-      <rect x="32" y="26" width="4" height="4" fill="#C9A84C" rx=".5"/>
-      <rect x="36" y="30" width="4" height="4" fill="#C9A84C" rx=".5"/>
-      <rect x="26" y="32" width="4" height="4" fill="#C9A84C" rx=".5"/>
-      <rect x="32" y="36" width="4" height="4" fill="#C9A84C" rx=".5"/>
+      <rect width="44" height="44" fill="#ffffff" rx="4"/>
+      <rect x="4" y="4" width="14" height="14" rx="2" fill="none" stroke="#147fe3" stroke-width="1.5"/>
+      <rect x="7" y="7" width="8" height="8" fill="#147fe3" rx="1"/>
+      <rect x="26" y="4" width="14" height="14" rx="2" fill="none" stroke="#147fe3" stroke-width="1.5"/>
+      <rect x="29" y="7" width="8" height="8" fill="#147fe3" rx="1"/>
+      <rect x="4" y="26" width="14" height="14" rx="2" fill="none" stroke="#147fe3" stroke-width="1.5"/>
+      <rect x="7" y="29" width="8" height="8" fill="#147fe3" rx="1"/>
+      <rect x="26" y="26" width="4" height="4" fill="#147fe3" rx=".5"/>
+      <rect x="32" y="26" width="4" height="4" fill="#147fe3" rx=".5"/>
+      <rect x="36" y="30" width="4" height="4" fill="#147fe3" rx=".5"/>
+      <rect x="26" y="32" width="4" height="4" fill="#147fe3" rx=".5"/>
+      <rect x="32" y="36" width="4" height="4" fill="#147fe3" rx=".5"/>
     </svg>
   </div>
 </div>
 
 <div class="card-back" style="position:relative">
+  <div class="back-brand">
+    <img src="${brandLogoUrl}" alt="logo">
+    <div><strong>Global Harvest Outer Ringroad</strong><span>Member Record</span></div>
+  </div>
   <div class="back-title">Next of Kin &amp; Church Information</div>
   <div class="back-row"><span class="back-lbl">Next of Kin</span><span class="back-val">${data.nokName||'—'}</span></div>
   <div class="back-row"><span class="back-lbl">NOK Phone</span><span class="back-val">${data.nokPhone||'—'}</span></div>
   <div class="back-row"><span class="back-lbl">Nationality</span><span class="back-val">${data.nationality||'Nigerian'}</span></div>
   <div class="back-row"><span class="back-lbl">State of Origin</span><span class="back-val">${data.stateOrigin||'—'}</span></div>
   <div class="back-row"><span class="back-lbl">Marital Status</span><span class="back-val">${data.marital||'—'}</span></div>
-  <div class="back-row" style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(201,168,76,0.12)"><span class="back-lbl">Date Issued</span><span class="back-val">${issued}</span></div>
+  <div class="back-row" style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(17,114,214,0.12)"><span class="back-lbl">Date Issued</span><span class="back-val">${issued}</span></div>
   <div class="back-row"><span class="back-lbl">Expiry Date</span><span class="back-val">${expiry}</span></div>
   <div class="sig-line">${data.fullName||'Member Signature'}</div>
   <div class="verse">"For I know the plans I have for you…" — Jeremiah 29:11</div>
@@ -632,14 +659,14 @@ async function downloadCard() {
   exportNode.style.left = '-99999px';
   exportNode.style.top = '0';
   exportNode.style.width = '430px';
-  exportNode.style.background = '#07070E';
+  exportNode.style.background = '#eef7ff';
   exportNode.style.padding = '24px 20px';
   exportNode.innerHTML = cardMarkup;
   document.body.appendChild(exportNode);
 
   try {
     const canvas = await html2canvas(exportNode, {
-      backgroundColor: '#07070E',
+      backgroundColor: '#eef7ff',
       scale: 2,
       useCORS: true
     });
@@ -647,6 +674,7 @@ async function downloadCard() {
     a.href = canvas.toDataURL('image/png');
     a.download = `${(data.fullName||'member').replace(/\s+/g,'-')}-GlobalHarvestOuterRingroad-ID.png`;
     a.click();
+    await recordCardDownload('member');
   } finally {
     exportNode.remove();
   }
@@ -654,6 +682,10 @@ async function downloadCard() {
 
 async function submitRegistration() {
   const statusEl = document.getElementById('emailStatus');
+
+  if (data.registrationId) {
+    return true;
+  }
 
   if (isSubmitting) {
     return false;
@@ -680,8 +712,9 @@ async function submitRegistration() {
     }
 
     data.memberId = result.member_id || data.memberId;
+    data.registrationId = result.registration_id;
     document.getElementById('successIdDisplay').textContent = data.memberId;
-    statusEl.textContent = 'Registration saved to the Flask backend.';
+    statusEl.textContent = 'Registration saved successfully.';
     return true;
   } catch (err) {
     statusEl.textContent = err.message || 'Unable to save registration.';
@@ -769,6 +802,24 @@ async function goToSuccess() {
 
   populateCard();
   showScreen('screen-success');
+}
+
+async function recordCardDownload(actor) {
+  if (!data.registrationId) {
+    return;
+  }
+
+  try {
+    await fetch(`/api/registrations/${data.registrationId}/download`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ actor })
+    });
+  } catch (error) {
+    console.error('Unable to record download event.', error);
+  }
 }
 
 // Touch tilt for mobile

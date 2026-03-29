@@ -20,8 +20,20 @@ create table if not exists public.registrations (
   nok_phone text,
   member_id text not null unique,
   photo_path text,
+  download_count integer not null default 0,
+  last_downloaded_at timestamptz,
+  last_downloaded_by text,
   created_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.registrations
+  add column if not exists download_count integer not null default 0;
+
+alter table public.registrations
+  add column if not exists last_downloaded_at timestamptz;
+
+alter table public.registrations
+  add column if not exists last_downloaded_by text;
 
 create index if not exists registrations_created_at_idx
   on public.registrations (created_at desc);

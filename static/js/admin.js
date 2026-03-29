@@ -26,6 +26,7 @@ function renderLatestRegistration(item) {
     <strong>${item.full_name || "-"}</strong>
     <p>Member ID: ${item.member_id || "-"}</p>
     <p>Submitted: ${formatDate(item.created_at)}</p>
+    <p>Last card download: ${formatDate(item.last_downloaded_at)}</p>
   `;
 }
 
@@ -83,10 +84,18 @@ function renderRegistrations(items) {
           </td>
           <td>${item.department || "-"}</td>
           <td><span class="pill">${item.first_time || "No"}</span></td>
+          <td>
+            <div class="download-meta">
+              <strong>${item.download_count || 0} total</strong>
+              <span>${formatDate(item.last_downloaded_at)}</span>
+              <span>${item.last_downloaded_by ? `Last by ${item.last_downloaded_by}` : "Not downloaded yet"}</span>
+            </div>
+          </td>
           <td>${formatDate(item.created_at)}</td>
           <td>
             <div class="table-actions">
               <a href="/admin/id-card/${item.id}" target="_blank" rel="noopener noreferrer">Open ID Card</a>
+              <a href="/admin/id-card/${item.id}?autodownload=1" target="_blank" rel="noopener noreferrer">Download PNG</a>
               <button type="button" class="danger-btn" data-delete-id="${item.id}" data-delete-name="${item.full_name || "member"}">Delete</button>
             </div>
           </td>
@@ -151,6 +160,7 @@ async function loadSummary() {
   document.getElementById("firstTimers").textContent = payload.overview.first_timers;
   document.getElementById("capturedPhotos").textContent = payload.overview.captured_photos;
   document.getElementById("recentSignups").textContent = payload.overview.recent_signups;
+  document.getElementById("totalDownloads").textContent = payload.overview.total_downloads;
 
   renderLatestRegistration(payload.overview.latest_registration);
   renderBreakdown("genderBreakdown", payload.gender_breakdown, "No gender data yet.");

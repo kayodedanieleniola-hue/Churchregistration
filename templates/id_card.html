@@ -5,26 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ID Card | {{ registration.full_name }}</title>
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     :root {
-      --gold: #c9a84c;
-      --gold-soft: #e8c97a;
-      --ink: #0a0a10;
-      --panel: #121624;
-      --panel-soft: #1a1f32;
-      --text: #f2efe8;
-      --muted: #9ea5b3;
-      --success: #4ecba8;
+      --blue: #1487ea;
+      --blue-dark: #0b5dac;
+      --text: #0d2540;
+      --muted: #5b7898;
+      --line: rgba(20, 135, 234, 0.16);
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-family: "DM Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background:
-        radial-gradient(circle at top, rgba(201, 168, 76, 0.18), transparent 28%),
-        linear-gradient(180deg, #070b12 0%, #0e1521 100%);
+        radial-gradient(circle at top, rgba(20, 135, 234, 0.2), transparent 28%),
+        linear-gradient(180deg, #f8fcff 0%, #deefff 100%);
       color: var(--text);
       display: grid;
       place-items: center;
@@ -44,22 +43,61 @@
       align-items: center;
     }
 
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 30px rgba(20, 135, 234, 0.14);
+    }
+
+    .eyebrow,
+    .card-section-title,
+    .church-name {
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.78rem;
+    }
+
     .actions {
       display: flex;
       gap: 12px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .actions a,
     .actions button {
       text-decoration: none;
-      color: var(--text);
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.04);
+      color: var(--blue-dark);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.8);
       padding: 12px 16px;
       border-radius: 999px;
       cursor: pointer;
       font: inherit;
+    }
+
+    .actions .primary {
+      background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+      color: #ffffff;
+      border: 0;
+    }
+
+    .export-shell {
+      background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.46));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: 0 24px 60px rgba(8, 55, 102, 0.12);
     }
 
     .card-grid {
@@ -72,9 +110,9 @@
       position: relative;
       border-radius: 24px;
       padding: 24px;
-      background: linear-gradient(135deg, var(--panel) 0%, #0f1220 58%, #1a1428 100%);
-      border: 1px solid rgba(201,168,76,0.24);
-      box-shadow: 0 26px 60px rgba(0,0,0,0.35);
+      background: linear-gradient(145deg, #ffffff 0%, #edf7ff 56%, #d8ecff 100%);
+      border: 1px solid rgba(20,135,234,0.2);
+      box-shadow: 0 26px 60px rgba(8,55,102,0.1);
       overflow: hidden;
       min-height: 430px;
     }
@@ -84,24 +122,49 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at top left, rgba(201,168,76,0.15), transparent 34%),
-        radial-gradient(circle at bottom right, rgba(255,255,255,0.06), transparent 20%);
+        radial-gradient(circle at top left, rgba(20,135,234,0.16), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(121,191,255,0.22), transparent 24%);
       pointer-events: none;
     }
 
-    .church-name,
-    .card-section-title {
+    .card-face > * {
       position: relative;
       z-index: 1;
-      color: var(--gold-soft);
+    }
+
+    .card-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card-brand img {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      object-fit: cover;
+      border: 1px solid rgba(20,135,234,0.18);
+    }
+
+    .card-brand-copy strong {
+      display: block;
+      color: #0c3f76;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.76rem;
+    }
+
+    .card-brand-copy span {
+      display: block;
+      color: #6791b8;
       text-transform: uppercase;
       letter-spacing: 0.18em;
-      font-size: 0.78rem;
+      font-size: 0.62rem;
+      margin-top: 2px;
     }
 
     .card-body {
-      position: relative;
-      z-index: 1;
       display: grid;
       grid-template-columns: 104px 1fr;
       gap: 18px;
@@ -112,9 +175,9 @@
       width: 104px;
       height: 126px;
       border-radius: 16px;
-      border: 2px solid rgba(201,168,76,0.35);
+      border: 2px solid rgba(20,135,234,0.22);
       overflow: hidden;
-      background: var(--panel-soft);
+      background: #f3faff;
       display: grid;
       place-items: center;
       font-size: 2.2rem;
@@ -129,10 +192,11 @@
     .member-name {
       font-size: 1.7rem;
       margin: 0 0 8px;
+      font-family: "Cormorant Garamond", serif;
     }
 
     .member-dept {
-      color: var(--gold);
+      color: var(--blue);
       text-transform: uppercase;
       letter-spacing: 0.14em;
       font-size: 0.76rem;
@@ -153,27 +217,23 @@
     }
 
     .member-id {
-      position: relative;
-      z-index: 1;
       margin-top: 28px;
       padding-top: 14px;
-      border-top: 1px solid rgba(201,168,76,0.16);
+      border-top: 1px solid rgba(20,135,234,0.12);
       display: flex;
       justify-content: space-between;
       gap: 16px;
       align-items: center;
-      color: var(--gold-soft);
+      color: var(--blue-dark);
     }
 
     .verified {
-      color: var(--success);
+      color: var(--blue);
       font-size: 0.78rem;
       letter-spacing: 0.08em;
     }
 
     .back-grid {
-      position: relative;
-      z-index: 1;
       display: grid;
       gap: 12px;
       margin-top: 24px;
@@ -184,7 +244,7 @@
       justify-content: space-between;
       gap: 16px;
       padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(20,135,234,0.08);
       color: var(--muted);
     }
 
@@ -195,10 +255,17 @@
 
     .signature {
       margin-top: 18px;
-      border-bottom: 1px solid rgba(201,168,76,0.32);
+      border-bottom: 1px solid rgba(20,135,234,0.28);
       padding-bottom: 6px;
       color: var(--muted);
       font-style: italic;
+      font-family: "Cormorant Garamond", serif;
+      font-size: 1.05rem;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
     }
 
     @media (max-width: 760px) {
@@ -211,25 +278,8 @@
         align-items: flex-start;
       }
 
-      .actions {
-        flex-wrap: wrap;
-      }
-    }
-
-    @media print {
-      body {
-        background: #ffffff;
-        color: #111111;
-        padding: 0;
-      }
-
-      .page-topbar {
-        display: none;
-      }
-
-      .card-face {
-        box-shadow: none;
-        break-inside: avoid;
+      .brand {
+        align-items: flex-start;
       }
     }
   </style>
@@ -237,58 +287,120 @@
 <body>
   <main class="page">
     <div class="page-topbar">
-      <div>
-        <div class="church-name">Global Harvest Outer Ringroad</div>
-        <h1 style="margin:8px 0 0">Recovered Member ID Card</h1>
+      <div class="brand">
+        <img src="{{ url_for('static', filename='branding/logo.jpeg') }}" alt="Global Harvest Outer Ringroad logo">
+        <div>
+          <div class="eyebrow">Recovered Member ID</div>
+          <h1 style="margin:8px 0 0">Global Harvest Outer Ringroad</h1>
+          <div class="meta">This card can be reopened and exported again from the admin dashboard.</div>
+        </div>
       </div>
       <div class="actions">
         <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
-        <button type="button" onclick="window.print()">Print / Save PDF</button>
+        <button id="downloadCardBtn" class="primary" type="button">Download PNG</button>
       </div>
     </div>
 
-    <section class="card-grid">
-      <article class="card-face">
-        <div class="church-name">Front</div>
-        <div class="card-body">
-          <div class="photo-wrap">
-            {% if registration.photo_url %}
-            <img src="{{ registration.photo_url }}" alt="{{ registration.full_name }}">
-            {% else %}
-            <span>🧑</span>
-            {% endif %}
+    <section id="exportCard" class="export-shell">
+      <div class="card-grid">
+        <article class="card-face">
+          <div class="card-brand">
+            <img src="{{ url_for('static', filename='branding/logo.jpeg') }}" alt="Global Harvest Outer Ringroad logo">
+            <div class="card-brand-copy">
+              <strong>Global Harvest Outer Ringroad</strong>
+              <span>Ibadan</span>
+            </div>
           </div>
-          <div>
-            <h2 class="member-name">{{ registration.full_name }}</h2>
-            <div class="member-dept">{{ registration.department or 'Member' }}</div>
-            <div class="detail"><span>Age</span><strong>{% if registration.age %}{{ registration.age }} years{% else %}-{% endif %}</strong></div>
-            <div class="detail"><span>Gender</span><strong>{{ registration.gender or '-' }}</strong></div>
-            <div class="detail"><span>Phone</span><strong>{{ registration.phone or '-' }}</strong></div>
-            <div class="detail"><span>Email</span><strong>{{ registration.email or '-' }}</strong></div>
-            <div class="detail"><span>Address</span><strong>{{ registration.address or '-' }}</strong></div>
+          <div class="church-name">Front</div>
+          <div class="card-body">
+            <div class="photo-wrap">
+              {% if registration.photo_url %}
+              <img src="{{ registration.photo_url }}" alt="{{ registration.full_name }}">
+              {% else %}
+              <span>🧑</span>
+              {% endif %}
+            </div>
+            <div>
+              <h2 class="member-name">{{ registration.full_name }}</h2>
+              <div class="member-dept">{{ registration.department or 'Member' }}</div>
+              <div class="detail"><span>Age</span><strong>{% if registration.age %}{{ registration.age }} years{% else %}-{% endif %}</strong></div>
+              <div class="detail"><span>Gender</span><strong>{{ registration.gender or '-' }}</strong></div>
+              <div class="detail"><span>Phone</span><strong>{{ registration.phone or '-' }}</strong></div>
+              <div class="detail"><span>Email</span><strong>{{ registration.email or '-' }}</strong></div>
+              <div class="detail"><span>Address</span><strong>{{ registration.address or '-' }}</strong></div>
+            </div>
           </div>
-        </div>
-        <div class="member-id">
-          <strong>{{ registration.member_id or '-' }}</strong>
-          <span class="verified">Verified Member</span>
-        </div>
-      </article>
+          <div class="member-id">
+            <strong>{{ registration.member_id or '-' }}</strong>
+            <span class="verified">Verified Member</span>
+          </div>
+        </article>
 
-      <article class="card-face">
-        <div class="card-section-title">Back</div>
-        <div class="back-grid">
-          <div class="back-row"><span>Next of Kin</span><strong>{{ registration.nok_name or '-' }}</strong></div>
-          <div class="back-row"><span>NOK Phone</span><strong>{{ registration.nok_phone or '-' }}</strong></div>
-          <div class="back-row"><span>Nationality</span><strong>{{ registration.nationality or '-' }}</strong></div>
-          <div class="back-row"><span>State of Origin</span><strong>{{ registration.state_origin or '-' }}</strong></div>
-          <div class="back-row"><span>Marital Status</span><strong>{{ registration.marital_status or '-' }}</strong></div>
-          <div class="back-row"><span>Occupation</span><strong>{{ registration.occupation or '-' }}</strong></div>
-          <div class="back-row"><span>Invited By</span><strong>{{ registration.inviter or '-' }}</strong></div>
-          <div class="back-row"><span>Date Registered</span><strong>{{ registration.created_at or '-' }}</strong></div>
-        </div>
-        <div class="signature">{{ registration.full_name }}</div>
-      </article>
+        <article class="card-face">
+          <div class="card-brand">
+            <img src="{{ url_for('static', filename='branding/logo.jpeg') }}" alt="Global Harvest Outer Ringroad logo">
+            <div class="card-brand-copy">
+              <strong>Global Harvest Outer Ringroad</strong>
+              <span>Member Record</span>
+            </div>
+          </div>
+          <div class="card-section-title">Back</div>
+          <div class="back-grid">
+            <div class="back-row"><span>Next of Kin</span><strong>{{ registration.nok_name or '-' }}</strong></div>
+            <div class="back-row"><span>NOK Phone</span><strong>{{ registration.nok_phone or '-' }}</strong></div>
+            <div class="back-row"><span>Nationality</span><strong>{{ registration.nationality or '-' }}</strong></div>
+            <div class="back-row"><span>State of Origin</span><strong>{{ registration.state_origin or '-' }}</strong></div>
+            <div class="back-row"><span>Marital Status</span><strong>{{ registration.marital_status or '-' }}</strong></div>
+            <div class="back-row"><span>Occupation</span><strong>{{ registration.occupation or '-' }}</strong></div>
+            <div class="back-row"><span>Invited By</span><strong>{{ registration.inviter or '-' }}</strong></div>
+            <div class="back-row"><span>Date Registered</span><strong>{{ registration.created_at or '-' }}</strong></div>
+            <div class="back-row"><span>Last Download</span><strong>{{ registration.last_downloaded_at or 'Not yet downloaded' }}</strong></div>
+          </div>
+          <div class="signature">{{ registration.full_name }}</div>
+        </article>
+      </div>
     </section>
   </main>
+
+  <script>
+    const registrationId = {{ registration.id }};
+    const autoDownload = new URLSearchParams(window.location.search).get("autodownload") === "1";
+
+    async function recordAdminDownload() {
+      try {
+        await fetch(`/api/admin/registrations/${registrationId}/download`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+      } catch (error) {
+        console.error("Unable to record admin download.", error);
+      }
+    }
+
+    async function downloadCardAsPng() {
+      const exportNode = document.getElementById("exportCard");
+      const canvas = await html2canvas(exportNode, {
+        backgroundColor: "#eef7ff",
+        scale: 2,
+        useCORS: true
+      });
+
+      const anchor = document.createElement("a");
+      anchor.href = canvas.toDataURL("image/png");
+      anchor.download = "{{ registration.full_name|replace(' ', '-') }}-GlobalHarvestOuterRingroad-ID.png";
+      anchor.click();
+      await recordAdminDownload();
+    }
+
+    document.getElementById("downloadCardBtn").addEventListener("click", downloadCardAsPng);
+
+    if (autoDownload) {
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          downloadCardAsPng();
+        }, 250);
+      });
+    }
+  </script>
 </body>
 </html>

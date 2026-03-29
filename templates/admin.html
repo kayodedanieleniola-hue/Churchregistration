@@ -9,9 +9,12 @@
 </head>
 <body class="admin-body">
   <header class="admin-topbar">
-    <div>
+    <div class="admin-heading">
+      <img class="admin-brand-logo" src="{{ url_for('static', filename='branding/logo.jpeg') }}" alt="Global Harvest Outer Ringroad logo">
+      <div>
       <p class="eyebrow">Dashboard</p>
       <h1>Global Harvest Outer Ringroad</h1>
+      </div>
     </div>
     <div class="admin-topbar-actions">
       <button id="refreshBtn" type="button">Refresh Data</button>
@@ -36,6 +39,10 @@
       <article class="stat-card">
         <span>Last 7 Days</span>
         <strong id="recentSignups">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Total Card Downloads</span>
+        <strong id="totalDownloads">0</strong>
       </article>
     </section>
 
@@ -104,6 +111,7 @@
               <th>Contact</th>
               <th>Department</th>
               <th>First Time</th>
+              <th>Downloads</th>
               <th>Created</th>
               <th>Actions</th>
             </tr>

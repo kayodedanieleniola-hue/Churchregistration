@@ -51,6 +51,9 @@ CSV_COLUMNS = [
     "nok_phone",
     "member_id",
     "photo_path",
+    "download_count",
+    "last_downloaded_at",
+    "last_downloaded_by",
     "created_at",
 ]
 
@@ -139,6 +142,7 @@ def decorate_registration(row):
     decorated = dict(row)
     decorated["registration_id"] = str(decorated.get("id") or "")
     decorated["id"] = decorated.get("id")
+    decorated["download_count"] = int(decorated.get("download_count") or 0)
     photo_path = decorated.get("photo_path")
     decorated["photo_url"] = (
         url_for("member_photo", filename=photo_path)
@@ -231,6 +235,28 @@ def delete_registration_by_id(registration_id):
     return registration
 
 
+def mark_registration_downloaded(registration_id, actor):
+    registration = get_registration_by_id(registration_id)
+    if registration is None:
+        return None
+
+    payload = {
+        "download_count": int(registration.get("download_count") or 0) + 1,
+        "last_downloaded_at": get_now_iso(),
+        "last_downloaded_by": actor,
+    }
+    response = (
+        get_supabase()
+        .table("registrations")
+        .update(payload)
+        .eq("id", registration_id)
+        .execute()
+    )
+    if not response.data:
+        return None
+    return decorate_registration(response.data[0])
+
+
 def build_csv_export(registrations):
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=CSV_COLUMNS)
@@ -260,6 +286,9 @@ def build_csv_export(registrations):
                 "nok_phone": row.get("nok_phone", ""),
                 "member_id": row.get("member_id", ""),
                 "photo_path": row.get("photo_path", ""),
+                "download_count": row.get("download_count", 0),
+                "last_downloaded_at": row.get("last_downloaded_at", ""),
+                "last_downloaded_by": row.get("last_downloaded_by", ""),
                 "created_at": row.get("created_at", ""),
             }
         )
@@ -275,6 +304,7 @@ def get_storage_summary(registrations):
     department_totals = {}
     first_timers = 0
     captured_photos = 0
+    total_downloads = 0
 
     for row in registrations:
         created_at = row.get("created_at")
@@ -295,6 +325,7 @@ def get_storage_summary(registrations):
             first_timers += 1
         if row.get("photo_path"):
             captured_photos += 1
+        total_downloads += int(row.get("download_count") or 0)
 
     return {
         "success": True,
@@ -303,6 +334,7 @@ def get_storage_summary(registrations):
             "first_timers": first_timers,
             "captured_photos": captured_photos,
             "recent_signups": recent_signups,
+            "total_downloads": total_downloads,
             "latest_registration": latest_registration,
         },
         "gender_breakdown": [
@@ -512,6 +544,29 @@ def delete_registration(registration_id):
         if removed is None:
             return jsonify({"success": False, "error": "Registration not found."}), 404
         return jsonify({"success": True, "message": "Registration deleted successfully."})
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/api/registrations/<int:registration_id>/download", methods=["POST"])
+def mark_member_download(registration_id):
+    try:
+        updated = mark_registration_downloaded(registration_id, "member")
+        if updated is None:
+            return jsonify({"success": False, "error": "Registration not found."}), 404
+        return jsonify({"success": True, "registration": updated})
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/api/admin/registrations/<int:registration_id>/download", methods=["POST"])
+@admin_required
+def mark_admin_download(registration_id):
+    try:
+        updated = mark_registration_downloaded(registration_id, "admin")
+        if updated is None:
+            return jsonify({"success": False, "error": "Registration not found."}), 404
+        return jsonify({"success": True, "registration": updated})
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
