@@ -606,14 +606,6 @@ def register():
         return jsonify({"success": False, "error": "Email is required."}), 400
 
     try:
-        if find_by_email(registration["email"]):
-            return jsonify(
-                {
-                    "success": False,
-                    "error": "This email address already has a registration.",
-                }
-            ), 409
-
         assign_unique_member_id(registration)
         photo_path = save_member_photo(data.get("photoDataUrl"), registration["member_id"])
         payload = {

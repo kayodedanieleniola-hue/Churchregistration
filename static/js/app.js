@@ -740,6 +740,10 @@ async function submitRegistration() {
 
     const result = await response.json();
     if (!response.ok || !result.success) {
+      console.error('Registration save failed', {
+        status: response.status,
+        result
+      });
       throw new Error(result.error || 'Unable to save registration.');
     }
 

@@ -1,7 +1,7 @@
 create table if not exists public.registrations (
   id bigint generated always as identity primary key,
   full_name text not null,
-  email text not null unique,
+  email text not null,
   phone text,
   dob text,
   age integer,
@@ -34,6 +34,9 @@ alter table public.registrations
 
 alter table public.registrations
   add column if not exists last_downloaded_by text;
+
+alter table public.registrations
+  drop constraint if exists registrations_email_key;
 
 create index if not exists registrations_created_at_idx
   on public.registrations (created_at desc);
