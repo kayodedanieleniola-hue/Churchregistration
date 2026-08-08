@@ -285,6 +285,20 @@ def assign_unique_member_id(registration, max_attempts=25):
     raise RuntimeError("Could not generate a unique member ID. Please try again.")
 
 
+def is_duplicate_member_id_error(error):
+    message = str(error)
+    return "registrations_member_id_key" in message or (
+        "duplicate key value" in message and "member_id" in message
+    )
+
+
+def is_duplicate_email_error(error):
+    message = str(error)
+    return "registrations_email_key" in message or (
+        "duplicate key value" in message and "email" in message
+    )
+
+
 def decorate_registration(row):
     decorated = dict(row)
     decorated["registration_id"] = str(decorated.get("id") or "")
@@ -402,6 +416,37 @@ def mark_registration_downloaded(registration_id, actor):
     if not response.data:
         return None
     return decorate_registration(response.data[0])
+
+
+def create_registration_record(data, registration, max_attempts=5):
+    last_error = None
+
+    for _ in range(max_attempts):
+        assign_unique_member_id(registration)
+        photo_path = None
+
+        try:
+            photo_path = save_member_photo(data.get("photoDataUrl"), registration["member_id"])
+            payload = {
+                **registration,
+                "photo_path": photo_path,
+            }
+            response = (
+                get_supabase()
+                .table("registrations")
+                .insert(payload)
+                .execute()
+            )
+            return decorate_registration(response.data[0])
+        except Exception as exc:
+            last_error = exc
+            if photo_path:
+                delete_member_photo(photo_path)
+            if is_duplicate_member_id_error(exc):
+                continue
+            raise
+
+    raise RuntimeError(f"Could not save registration after generating a unique member ID. Last error: {last_error}")
 
 
 def build_csv_export(registrations):
@@ -606,20 +651,16 @@ def register():
         return jsonify({"success": False, "error": "Email is required."}), 400
 
     try:
-        assign_unique_member_id(registration)
-        photo_path = save_member_photo(data.get("photoDataUrl"), registration["member_id"])
-        payload = {
-            **registration,
-            "photo_path": photo_path,
-        }
-        response = (
-            get_supabase()
-            .table("registrations")
-            .insert(payload)
-            .execute()
-        )
-        saved_row = decorate_registration(response.data[0])
+        saved_row = create_registration_record(data, registration)
     except Exception as exc:
+        if is_duplicate_email_error(exc):
+            return jsonify(
+                {
+                    "success": False,
+                    "error": "This email is still blocked by a unique rule in Supabase. Drop the registrations_email_key constraint and try again.",
+                    "details": str(exc),
+                }
+            ), 409
         return jsonify({"success": False, "error": str(exc)}), 500
 
     return jsonify(

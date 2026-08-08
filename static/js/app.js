@@ -744,6 +744,7 @@ async function submitRegistration() {
         status: response.status,
         result
       });
+      console.error('Registration save response:', JSON.stringify(result));
       throw new Error(result.error || 'Unable to save registration.');
     }
 
