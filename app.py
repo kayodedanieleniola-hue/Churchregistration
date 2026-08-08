@@ -2,6 +2,7 @@ import base64
 import csv
 import io
 import os
+import random
 import re
 from datetime import datetime, timezone
 from functools import wraps
@@ -265,6 +266,23 @@ def normalize_registration_payload(data):
         "nok_phone": data.get("nokPhone") or "",
         "member_id": (data.get("memberId") or "").strip(),
     }
+
+
+def generate_member_id(state_origin):
+    state = ((state_origin or "LAG").strip() or "LAG")[:3].upper()
+    year = datetime.now().year
+    num = random.randint(1000, 9999)
+    return f"GHO-{state}-{year}-{num}"
+
+
+def assign_unique_member_id(registration, max_attempts=25):
+    for _ in range(max_attempts):
+        member_id = generate_member_id(registration.get("state_origin"))
+        if not find_by_member_id(member_id):
+            registration["member_id"] = member_id
+            return registration
+
+    raise RuntimeError("Could not generate a unique member ID. Please try again.")
 
 
 def decorate_registration(row):
@@ -586,17 +604,8 @@ def register():
         return jsonify({"success": False, "error": "Full name is required."}), 400
     if not registration["email"]:
         return jsonify({"success": False, "error": "Email is required."}), 400
-    if not registration["member_id"]:
-        return jsonify({"success": False, "error": "Member ID is required."}), 400
 
     try:
-        if find_by_member_id(registration["member_id"]):
-            return jsonify(
-                {
-                    "success": False,
-                    "error": "This member ID already exists. Refresh and try again.",
-                }
-            ), 409
         if find_by_email(registration["email"]):
             return jsonify(
                 {
@@ -605,6 +614,7 @@ def register():
                 }
             ), 409
 
+        assign_unique_member_id(registration)
         photo_path = save_member_photo(data.get("photoDataUrl"), registration["member_id"])
         payload = {
             **registration,

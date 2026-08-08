@@ -724,6 +724,7 @@ async function submitRegistration() {
 
   collectData();
   data.memberId = data.memberId || generateMemberId();
+  data.registrationError = '';
 
   isSubmitting = true;
   statusEl.textContent = 'Saving your registration...';
@@ -744,11 +745,13 @@ async function submitRegistration() {
 
     data.memberId = result.member_id || data.memberId;
     data.registrationId = result.registration_id;
+    data.registrationError = '';
     document.getElementById('successIdDisplay').textContent = data.memberId;
     statusEl.textContent = 'Registration saved successfully.';
     return true;
   } catch (err) {
     statusEl.textContent = err.message || 'Unable to save registration.';
+    data.registrationError = statusEl.textContent;
     return false;
   } finally {
     isSubmitting = false;
@@ -827,7 +830,7 @@ function goBack() {
 async function goToSuccess() {
   const saved = await submitRegistration();
   if (!saved) {
-    window.alert('Registration could not be saved. Please try again.');
+    window.alert(data.registrationError || 'Registration could not be saved. Please try again.');
     return;
   }
 
