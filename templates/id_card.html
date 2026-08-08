@@ -323,7 +323,7 @@
             <div>
               <h2 class="member-name">{{ registration.full_name }}</h2>
               <div class="member-dept">{{ registration.department or 'Member' }}</div>
-              <div class="detail"><span>Age</span><strong>{% if registration.age %}{{ registration.age }} years{% else %}-{% endif %}</strong></div>
+              <div class="detail"><span>D.O.B</span><strong>{{ registration.dob or '-' }}</strong></div>
               <div class="detail"><span>Gender</span><strong>{{ registration.gender or '-' }}</strong></div>
               <div class="detail"><span>Phone</span><strong>{{ registration.phone or '-' }}</strong></div>
               <div class="detail"><span>Email</span><strong>{{ registration.email or '-' }}</strong></div>

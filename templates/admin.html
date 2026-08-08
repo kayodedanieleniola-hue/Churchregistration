@@ -98,8 +98,28 @@
 
     <section class="panel">
       <div class="panel-head">
+        <div>
+          <h2>Birthday Reminders</h2>
+          <p class="panel-note">Members with birthdays today, in 3 days, or in 7 days.</p>
+        </div>
+        <button id="sendBirthdayRemindersBtn" type="button">Send WhatsApp</button>
+      </div>
+      <div id="birthdayReminderStatus" class="table-status">Ready to send birthday reminders.</div>
+      <div id="birthdayReminders" class="birthday-grid empty-state">No birthdays coming up.</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
         <h2>Registrations</h2>
-        <input id="searchInput" type="search" placeholder="Search by name, email, phone, member ID">
+        <div class="table-filters">
+          <select id="departmentFilter" aria-label="Filter by department">
+            <option value="">All Departments</option>
+            {% for department in departments %}
+            <option>{{ department }}</option>
+            {% endfor %}
+          </select>
+          <input id="searchInput" type="search" placeholder="Search by name, email, phone, member ID">
+        </div>
       </div>
       <div id="tableStatus" class="table-status">Loading registrations...</div>
       <div class="table-wrap">

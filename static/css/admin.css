@@ -109,7 +109,8 @@ body {
 }
 
 .auth-form label,
-.panel-head input {
+.panel-head input,
+.panel-head select {
   display: grid;
   gap: 8px;
 }
@@ -120,8 +121,10 @@ body {
 }
 
 .auth-form input,
+.panel-head select,
 .panel-head input,
 .admin-topbar-actions button,
+.panel-head button,
 .auth-form button,
 .backup-link,
 .table-actions a,
@@ -131,6 +134,7 @@ body {
 }
 
 .auth-form input,
+.panel-head select,
 .panel-head input {
   padding: 14px 16px;
   border: 1px solid rgba(20, 135, 234, 0.12);
@@ -138,8 +142,24 @@ body {
   color: var(--text);
 }
 
+.table-filters {
+  display: flex;
+  gap: 12px;
+  width: min(100%, 640px);
+}
+
+.table-filters select {
+  min-width: 190px;
+}
+
+.table-filters input {
+  flex: 1;
+  min-width: 220px;
+}
+
 .auth-form button,
-.admin-topbar-actions button {
+.admin-topbar-actions button,
+.panel-head button {
   padding: 12px 18px;
   cursor: pointer;
   transition: 0.2s ease;
@@ -150,9 +170,17 @@ body {
 }
 
 .auth-form button:hover,
-.admin-topbar-actions button:hover {
+.admin-topbar-actions button:hover,
+.panel-head button:hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 30px rgba(20, 135, 234, 0.18);
+}
+
+.panel-head button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+  box-shadow: none;
 }
 
 .admin-topbar-actions a {
@@ -213,7 +241,9 @@ body {
 }
 
 .backup-link,
-.table-actions a {
+.table-actions a,
+.birthday-card a,
+.birthday-card button {
   text-decoration: none;
   color: var(--blue-dark);
   border: 1px solid var(--line);
@@ -226,8 +256,15 @@ body {
 .table-status,
 .latest-registration p,
 .list-item span,
+.birthday-card span,
+.panel-note,
 table td {
   color: var(--muted);
+}
+
+.panel-note {
+  margin: 6px 0 0;
+  font-size: 0.92rem;
 }
 
 .stat-card strong {
@@ -361,6 +398,39 @@ tbody tr:hover {
   color: var(--blue-dark);
 }
 
+.birthday-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.birthday-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.birthday-card div {
+  display: grid;
+  gap: 5px;
+}
+
+.birthday-card a,
+.birthday-card button {
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.birthday-card button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 @media (max-width: 1200px) {
   .stats-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -402,5 +472,16 @@ tbody tr:hover {
 
   .admin-topbar-actions {
     justify-items: start;
+  }
+
+  .table-filters {
+    display: grid;
+    width: 100%;
+  }
+
+  .table-filters select,
+  .table-filters input {
+    min-width: 0;
+    width: 100%;
   }
 }

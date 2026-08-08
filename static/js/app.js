@@ -438,13 +438,20 @@ function generateMemberId() {
   return `GHO-${state}-2026-${num}`;
 }
 
+function formatDob(value) {
+  if (!value) return '—';
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('en-NG', {day:'2-digit',month:'short',year:'numeric'});
+}
+
 function populateCard() {
   data.memberId = data.memberId || generateMemberId();
-  const ageStr = data.ageNum ? `${data.ageNum} yrs` : '—';
+  const dobStr = formatDob(data.dob);
 
   document.getElementById('cardName').textContent = data.fullName || '—';
   document.getElementById('cardDept').textContent = (data.department || 'Member').toUpperCase();
-  document.getElementById('cardAge').textContent = ageStr;
+  document.getElementById('cardDob').textContent = dobStr;
   document.getElementById('cardPhone').textContent = data.phone || '—';
   document.getElementById('cardEmail').textContent = data.email || '—';
   document.getElementById('cardAddr').textContent = (data.address || '—').slice(0,30);
@@ -622,7 +629,7 @@ async function exportCardPng() {
     <div class="info">
       <div class="name">${data.fullName||'—'}</div>
       <div class="dept">${(data.department||'Member').toUpperCase()}</div>
-      <div class="detail"><span class="detail-lbl">Age</span>${data.ageNum ? data.ageNum+' years' : '—'}</div>
+      <div class="detail"><span class="detail-lbl">D.O.B</span>${formatDob(data.dob)}</div>
       <div class="detail"><span class="detail-lbl">Gender</span>${data.gender||'—'}</div>
       <div class="detail"><span class="detail-lbl">Phone</span>${data.phone||'—'}</div>
       <div class="detail"><span class="detail-lbl">Email</span><span style="font-size:.62rem;word-break:break-all">${data.email||'—'}</span></div>

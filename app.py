@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 
+from dotenv import load_dotenv
 from flask import (
     Flask,
     abort,
@@ -21,13 +22,35 @@ from flask import (
 )
 from flask_cors import CORS
 from supabase import Client, create_client
+from twilio.rest import Client as TwilioClient
 
 
 BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
+
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "member-photos").strip() or "member-photos"
 EXPORT_FILENAME = "registrations-export.csv"
+BIRTHDAY_REMINDER_DAYS = {
+    int(value.strip())
+    for value in os.getenv("BIRTHDAY_REMINDER_DAYS", "7,3,0").split(",")
+    if value.strip().isdigit()
+}
+DEPARTMENTS = [
+    "Choir",
+    "Drama",
+    "Dance",
+    "Ushers",
+    "Sound",
+    "Media",
+    "Children's Ministry",
+    "Youth Ministry",
+    "Prayer Team",
+    "Evangelism",
+    "Protocol",
+    "None for now",
+]
 
 CSV_COLUMNS = [
     "registration_id",
@@ -62,6 +85,7 @@ app.secret_key = os.getenv("SECRET_KEY", "change-this-secret-key")
 CORS(app)
 
 supabase_client = None
+twilio_client = None
 
 
 def get_admin_credentials():
@@ -102,8 +126,113 @@ def get_supabase() -> Client:
     return supabase_client
 
 
+def get_twilio() -> TwilioClient:
+    global twilio_client
+
+    if twilio_client is not None:
+        return twilio_client
+
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
+    if not account_sid or not auth_token:
+        raise RuntimeError("Twilio is not configured. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN.")
+
+    twilio_client = TwilioClient(account_sid, auth_token)
+    return twilio_client
+
+
 def get_now_iso():
     return datetime.now(timezone.utc).isoformat()
+
+
+def parse_phone_numbers(value):
+    return [
+        phone.strip()
+        for phone in (value or "").split(",")
+        if phone.strip()
+    ]
+
+
+def parse_birth_date(value):
+    if not value:
+        return None
+
+    try:
+        return datetime.strptime(str(value), "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def days_until_birthday(dob, today=None):
+    birth_date = parse_birth_date(dob)
+    if birth_date is None:
+        return None
+
+    today = today or datetime.now().date()
+    birthday = birth_date.replace(year=today.year)
+    if birthday < today:
+        birthday = birth_date.replace(year=today.year + 1)
+    return (birthday - today).days
+
+
+def format_birthday_label(dob):
+    birth_date = parse_birth_date(dob)
+    if birth_date is None:
+        return str(dob or "-")
+    return birth_date.strftime("%d %b")
+
+
+def get_birthday_reminder_members(registrations):
+    reminder_members = []
+    for row in registrations:
+        days_away = days_until_birthday(row.get("dob"))
+        if days_away in BIRTHDAY_REMINDER_DAYS:
+            reminder_members.append(
+                {
+                    "full_name": row.get("full_name") or "Member",
+                    "phone": row.get("phone") or "-",
+                    "department": row.get("department") or "Member",
+                    "dob": row.get("dob") or "",
+                    "birthday": format_birthday_label(row.get("dob")),
+                    "days_away": days_away,
+                }
+            )
+
+    return sorted(reminder_members, key=lambda item: (item["days_away"], item["full_name"]))
+
+
+def build_birthday_admin_message(members):
+    if not members:
+        return "Birthday reminder: No member birthdays are due today, in 3 days, or in 7 days."
+
+    lines = ["Birthday reminder from Global Harvest Outer Ringroad:"]
+    for member in members:
+        if member["days_away"] == 0:
+            timing = "today"
+        elif member["days_away"] == 3:
+            timing = "in 3 days"
+        elif member["days_away"] == 7:
+            timing = "in 7 days"
+        else:
+            timing = f"in {member['days_away']} days"
+
+        lines.append(
+            f"- {member['full_name']} ({member['department']}) birthday is {timing}, {member['birthday']}. Phone: {member['phone']}"
+        )
+
+    return "\n".join(lines)
+
+
+def send_twilio_whatsapp(to_number, message):
+    whatsapp_from = os.getenv("TWILIO_WHATSAPP_FROM", "").strip()
+    if not whatsapp_from:
+        raise RuntimeError("TWILIO_WHATSAPP_FROM is not configured.")
+
+    return get_twilio().messages.create(
+        from_=whatsapp_from,
+        to=f"whatsapp:{to_number}",
+        body=message,
+    )
 
 
 def slugify(value):
@@ -301,7 +430,7 @@ def get_storage_summary(registrations):
     one_week_ago = datetime.now(timezone.utc).timestamp() - (7 * 24 * 60 * 60)
     recent_signups = 0
     gender_totals = {}
-    department_totals = {}
+    department_totals = {department: 0 for department in DEPARTMENTS}
     first_timers = 0
     captured_photos = 0
     total_downloads = 0
@@ -318,6 +447,8 @@ def get_storage_summary(registrations):
 
         gender = (row.get("gender") or "").strip() or "Unspecified"
         department = (row.get("department") or "").strip() or "Unassigned"
+        if department not in department_totals:
+            department_totals[department] = 0
         gender_totals[gender] = gender_totals.get(gender, 0) + 1
         department_totals[department] = department_totals.get(department, 0) + 1
 
@@ -343,7 +474,7 @@ def get_storage_summary(registrations):
         ],
         "department_breakdown": [
             {"label": label, "total": total}
-            for label, total in sorted(department_totals.items(), key=lambda item: (-item[1], item[0]))[:8]
+            for label, total in sorted(department_totals.items(), key=lambda item: (-item[1], item[0]))
         ],
         "csv_backup": {
             "path": "generated-from-supabase",
@@ -359,7 +490,7 @@ def get_storage_summary(registrations):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", departments=DEPARTMENTS)
 
 
 @app.route("/favicon.ico")
@@ -422,7 +553,7 @@ def admin_logout():
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
-    return render_template("admin.html")
+    return render_template("admin.html", departments=DEPARTMENTS)
 
 
 @app.route("/admin/id-card/<int:registration_id>")
@@ -523,6 +654,39 @@ def get_stats():
 def get_admin_summary():
     try:
         return jsonify(get_storage_summary(fetch_registrations()))
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@app.route("/api/admin/birthday-reminders/send", methods=["POST"])
+@admin_required
+def send_birthday_reminders():
+    try:
+        recipients = parse_phone_numbers(os.getenv("BIRTHDAY_REMINDER_RECIPIENTS", ""))
+        if not recipients:
+            return jsonify({"success": False, "error": "No birthday reminder recipients configured."}), 400
+
+        members = get_birthday_reminder_members(fetch_registrations())
+        message = build_birthday_admin_message(members)
+        sent = []
+        failed = []
+
+        for recipient in recipients:
+            try:
+                twilio_message = send_twilio_whatsapp(recipient, message)
+                sent.append({"to": recipient, "sid": twilio_message.sid})
+            except Exception as exc:
+                failed.append({"to": recipient, "error": str(exc)})
+
+        return jsonify(
+            {
+                "success": not failed,
+                "members": members,
+                "sent": sent,
+                "failed": failed,
+                "message": "Birthday reminder sent." if not failed else "Some reminders could not be sent.",
+            }
+        ), 200 if not failed else 207
     except Exception as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 

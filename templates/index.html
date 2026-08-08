@@ -230,16 +230,9 @@
         <div class="field-group" id="fg-department">
           <select class="field-select" id="department">
             <option value="" disabled selected></option>
-            <option>Choir</option>
-            <option>Ushering</option>
-            <option>Media</option>
-            <option>Children's Ministry</option>
-            <option>Youth Ministry</option>
-            <option>Prayer Team</option>
-            <option>Evangelism</option>
-            <option>Protocol</option>
-            <option>Drama & Arts</option>
-            <option>None for now</option>
+            {% for department in departments %}
+            <option>{{ department }}</option>
+            {% endfor %}
           </select>
           <label class="field-label">Department *</label>
           <div class="field-error">Please select a department</div>
@@ -428,7 +421,7 @@
               <div class="card-name" id="cardName">Full Name</div>
               <div class="card-dept" id="cardDept">Member</div>
               <div class="card-details">
-                <div class="card-detail"><span class="card-detail-label">Age</span><span id="cardAge">—</span></div>
+                <div class="card-detail"><span class="card-detail-label">D.O.B</span><span id="cardDob">—</span></div>
                 <div class="card-detail"><span class="card-detail-label">Phone</span><span id="cardPhone">—</span></div>
                 <div class="card-detail"><span class="card-detail-label">Email</span><span id="cardEmail" style="font-size:.55rem">—</span></div>
                 <div class="card-detail"><span class="card-detail-label">Addr.</span><span id="cardAddr" style="font-size:.55rem">—</span></div>
