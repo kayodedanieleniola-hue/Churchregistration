@@ -3,92 +3,231 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard | Global Harvest Outer Ringroad</title>
+  <title>Admin Portal | Global Harvest Outer Ringroad</title>
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
 <body class="admin-body">
+  <!-- Dynamic Ambient Background Mesh Glows -->
+  <div class="ambient-glow glow-1" aria-hidden="true"></div>
+  <div class="ambient-glow glow-2" aria-hidden="true"></div>
+  <div class="ambient-glow glow-3" aria-hidden="true"></div>
+
+  <!-- Main Top Navigation Bar -->
   <header class="admin-topbar">
-    <div class="admin-heading">
-      <img class="admin-brand-logo" src="{{ url_for('static', filename='branding/logo-transparent.png') }}" alt="Global Harvest Outer Ringroad logo">
-      <div>
-      <p class="eyebrow">Dashboard</p>
-      <h1>Global Harvest Outer Ringroad</h1>
+    <div class="admin-topbar-inner">
+      <div class="admin-brand">
+        <div class="brand-logo-frame">
+          <img class="admin-brand-logo" src="{{ url_for('static', filename='branding/logo-transparent.png') }}" alt="Global Harvest Outer Ringroad logo">
+        </div>
+        <div class="brand-details">
+          <div class="brand-pill">
+            <span class="status-indicator"></span>
+            <span>Church Admin Dashboard</span>
+          </div>
+          <h1>Global Harvest Outer Ringroad</h1>
+        </div>
       </div>
-    </div>
-    <div class="admin-topbar-actions">
-      <button id="refreshBtn" type="button">Refresh Data</button>
-      <a href="{{ url_for('admin_logout') }}">Logout</a>
+
+      <div class="admin-topbar-actions">
+        <a href="{{ url_for('index') }}" class="btn-topbar secondary" title="Open public registration form" target="_blank" rel="noopener noreferrer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          <span>Public Form</span>
+        </a>
+        <button id="refreshBtn" type="button" class="btn-topbar primary">
+          <svg class="refresh-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <span>Refresh Data</span>
+        </button>
+        <a href="{{ url_for('admin_logout') }}" class="btn-topbar danger">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Logout</span>
+        </a>
+      </div>
     </div>
   </header>
 
+  <!-- Shell Container -->
   <main class="admin-shell">
-    <section class="stats-grid">
+
+    <!-- Overview Stats Metrics Grid -->
+    <section class="stats-grid" aria-label="Key Registration Metrics">
       <article class="stat-card">
-        <span>Total Members</span>
-        <strong id="totalMembers">0</strong>
+        <div class="stat-icon-badge blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total Members</span>
+          <strong id="totalMembers" class="stat-value">0</strong>
+        </div>
       </article>
+
       <article class="stat-card">
-        <span>First Timers</span>
-        <strong id="firstTimers">0</strong>
+        <div class="stat-icon-badge emerald">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="17" y1="11" x2="23" y2="11"></line>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">First Timers</span>
+          <strong id="firstTimers" class="stat-value">0</strong>
+        </div>
       </article>
+
       <article class="stat-card">
-        <span>Photos Captured</span>
-        <strong id="capturedPhotos">0</strong>
+        <div class="stat-icon-badge purple">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Photos Captured</span>
+          <strong id="capturedPhotos" class="stat-value">0</strong>
+        </div>
       </article>
+
       <article class="stat-card">
-        <span>Last 7 Days</span>
-        <strong id="recentSignups">0</strong>
+        <div class="stat-icon-badge amber">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Last 7 Days</span>
+          <strong id="recentSignups" class="stat-value">0</strong>
+        </div>
       </article>
+
       <article class="stat-card">
-        <span>Total Card Downloads</span>
-        <strong id="totalDownloads">0</strong>
+        <div class="stat-icon-badge cyan">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Card Downloads</span>
+          <strong id="totalDownloads" class="stat-value">0</strong>
+        </div>
       </article>
     </section>
 
+    <!-- Database Recovery & Backup Card -->
     <section class="panel backup-panel">
       <div class="panel-head">
-        <h2>Recovery Backup</h2>
-        <a class="backup-link" href="/admin/backups/registrations.csv">Download CSV</a>
+        <div class="head-title">
+          <div class="panel-icon blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+          </div>
+          <div>
+            <h2>Recovery Backup</h2>
+            <p class="panel-subtitle">Durable cloud database storage & downloadable backup archives</p>
+          </div>
+        </div>
+        <a class="backup-link" href="/admin/backups/registrations.csv">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Download CSV</span>
+        </a>
       </div>
       <div class="backup-grid">
-        <div class="list-item">
-          <span>Database Engine</span>
-          <strong id="databaseEngine">-</strong>
+        <div class="backup-item">
+          <span class="backup-item-label">Database Engine</span>
+          <strong id="databaseEngine" class="backup-item-val">-</strong>
         </div>
-        <div class="list-item">
-          <span>CSV Rows</span>
-          <strong id="csvRows">0</strong>
+        <div class="backup-item">
+          <span class="backup-item-label">CSV Rows</span>
+          <strong id="csvRows" class="backup-item-val">0</strong>
         </div>
-        <div class="list-item">
-          <span>Last Backup Update</span>
-          <strong id="csvUpdatedAt">-</strong>
+        <div class="backup-item">
+          <span class="backup-item-label">Last Backup Update</span>
+          <strong id="csvUpdatedAt" class="backup-item-val">-</strong>
         </div>
-        <div class="list-item">
-          <span>CSV File</span>
-          <strong id="csvFilename">registrations_backup.csv</strong>
+        <div class="backup-item">
+          <span class="backup-item-label">CSV File</span>
+          <strong id="csvFilename" class="backup-item-val">registrations_backup.csv</strong>
         </div>
       </div>
     </section>
 
+    <!-- Analytics Dashboard Grid -->
     <section class="dashboard-grid">
+      <!-- Latest Registration Card -->
       <article class="panel">
         <div class="panel-head">
-          <h2>Latest Registration</h2>
+          <div class="head-title">
+            <div class="panel-icon emerald">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h2>Latest Registration</h2>
+              <p class="panel-subtitle">Most recent member addition</p>
+            </div>
+          </div>
         </div>
         <div id="latestRegistration" class="latest-registration empty-state">No registrations yet.</div>
       </article>
 
+      <!-- Member Distribution Breakdown Card -->
       <article class="panel">
         <div class="panel-head">
-          <h2>Breakdown</h2>
+          <div class="head-title">
+            <div class="panel-icon purple">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+            </div>
+            <div>
+              <h2>Breakdown</h2>
+              <p class="panel-subtitle">Gender and departmental statistics</p>
+            </div>
+          </div>
         </div>
         <div class="breakdown-grid">
-          <div>
+          <div class="breakdown-col">
             <h3>By Gender</h3>
             <div id="genderBreakdown" class="list-stack empty-state">No data yet.</div>
           </div>
-          <div>
+          <div class="breakdown-col">
             <h3>By Department</h3>
             <div id="departmentBreakdown" class="list-stack empty-state">No data yet.</div>
           </div>
@@ -96,34 +235,75 @@
       </article>
     </section>
 
+    <!-- Automated Birthday Reminders Section -->
     <section class="panel">
-      <div class="panel-head">
-        <div>
-          <h2>Birthday Reminders</h2>
-          <p class="panel-note">Members with birthdays today, in 3 days, or in 7 days.</p>
+      <div class="panel-head flex-between">
+        <div class="head-title">
+          <div class="panel-icon amber">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div>
+            <h2>Birthday Reminders</h2>
+            <p class="panel-note">Members with birthdays today, in 3 days, or in 7 days.</p>
+          </div>
         </div>
-        <button id="sendBirthdayRemindersBtn" type="button">Send WhatsApp</button>
+        <button id="sendBirthdayRemindersBtn" type="button" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <span>Send WhatsApp</span>
+        </button>
       </div>
       <div id="birthdayReminderStatus" class="table-status">Ready to send birthday reminders.</div>
       <div id="birthdayReminders" class="birthday-grid empty-state">No birthdays coming up.</div>
     </section>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Registrations</h2>
+    <!-- Main Registrations Management Section -->
+    <section class="panel registrations-panel">
+      <div class="panel-head flex-wrap">
+        <div class="head-title">
+          <div class="panel-icon cyan">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <div>
+            <h2>Registrations</h2>
+            <p class="panel-subtitle">Manage member entries, search records, and issue digital ID cards</p>
+          </div>
+        </div>
+
         <div class="table-filters">
-          <select id="departmentFilter" aria-label="Filter by department">
-            <option value="">All Departments</option>
-            {% for department in departments %}
-            <option>{{ department }}</option>
-            {% endfor %}
-          </select>
-          <input id="searchInput" type="search" placeholder="Search by name, email, phone, member ID">
+          <div class="filter-select-wrapper">
+            <select id="departmentFilter" aria-label="Filter by department">
+              <option value="">All Departments</option>
+              {% for department in departments %}
+              <option value="{{ department }}">{{ department }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input id="searchInput" type="search" placeholder="Search by name, email, phone, member ID">
+          </div>
         </div>
       </div>
+
       <div id="tableStatus" class="table-status">Loading registrations...</div>
+      
       <div class="table-wrap">
-        <table>
+        <table class="admin-table">
           <thead>
             <tr>
               <th>Name</th>
