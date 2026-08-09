@@ -27,7 +27,7 @@ from twilio.rest import Client as TwilioClient
 
 
 BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env", override=True)
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
@@ -91,8 +91,8 @@ twilio_client = None
 
 def get_admin_credentials():
     return (
-        os.getenv("ADMIN_USERNAME", "admin"),
-        os.getenv("ADMIN_PASSWORD", "change-me"),
+        os.getenv("ADMIN_USERNAME", "admin").strip(),
+        os.getenv("ADMIN_PASSWORD", "change-me").strip(),
     )
 
 
@@ -441,7 +441,7 @@ def create_registration_record(data, registration, max_attempts=5):
         except Exception as exc:
             last_error = exc
             if photo_path:
-                delete_member_photo(photo_path)
+                delete_photo(photo_path)
             if is_duplicate_member_id_error(exc):
                 continue
             raise
@@ -589,10 +589,10 @@ def member_photo(filename):
 def admin_login():
     if request.method == "POST":
         username = (request.form.get("username") or "").strip()
-        password = request.form.get("password") or ""
+        password = (request.form.get("password") or "").strip()
         admin_username, admin_password = get_admin_credentials()
 
-        if username == admin_username and password == admin_password:
+        if username.lower() == admin_username.lower() and password == admin_password:
             session["is_admin"] = True
             return redirect(url_for("admin_dashboard"))
 
